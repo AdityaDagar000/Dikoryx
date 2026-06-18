@@ -1,0 +1,319 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap');
+
+:root {
+  --neon-cyan: #00f0ff;
+  --neon-magenta: #ff00ff;
+  --neon-purple: #8b5cf6;
+  --bg-dark: #0a0a0f;
+  
+  --glass-bg: rgba(20, 10, 30, 0.45);
+  --glass-border: rgba(255, 0, 255, 0.15);
+  --input-bg: rgba(0, 0, 0, 0.4);
+  
+  --font-heading: 'Rajdhani', sans-serif;
+  --font-body: 'Fira Code', monospace;
+}
+
+* { box-sizing: border-box; }
+
+body, html {
+  margin: 0; padding: 0;
+  background-color: var(--bg-dark);
+  color: #fff;
+  height: 100vh; overflow: hidden;
+}
+
+/* =========================================
+   BACKGROUND & TEXTURES
+========================================= */
+.synth-root {
+  min-height: 100vh;
+  display: flex; justify-content: center; align-items: center;
+  position: relative;
+  padding: 20px;
+  /* 👇 This tells CSS to go up one folder, into assets, and grab the image */
+  background-image: url('../assets/cyberpunk-bg.jpg'); 
+  background-size: cover;
+  background-position: center;
+}
+
+.cyber-scanlines {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.25) 2px, rgba(0, 0, 0, 0.25) 4px);
+  z-index: 1; pointer-events: none;
+}
+
+/* =========================================
+   MAIN GLASS CARD (The Clean Look)
+========================================= */
+.synth-glass-card {
+  position: relative; z-index: 10;
+  width: 100%; max-width: 450px;
+  padding: 40px 30px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  border-radius: 20px;
+  box-shadow: 0 0 40px rgba(255, 0, 255, 0.05), inset 0 0 20px rgba(255, 0, 255, 0.02);
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Profile Avatar Icon */
+.synth-avatar {
+  width: 60px; height: 60px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex; justify-content: center; align-items: center;
+  margin-bottom: 20px;
+  color: #aaa;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+}
+.synth-avatar svg { width: 30px; height: 30px; }
+
+/* =========================================
+   TYPOGRAPHY
+========================================= */
+.synth-header { text-align: center; margin-bottom: 30px; width: 100%; }
+
+.synth-title {
+  font-family: var(--font-heading);
+  font-size: 2.5rem; font-weight: 700;
+  color: #fff;
+  margin: 0 0 5px 0;
+  letter-spacing: 2px;
+  position: relative;
+  display: inline-block;
+}
+
+.synth-subtitle {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 1rem; color: #ccc;
+  margin: 0;
+}
+
+/* =========================================
+   INPUTS (Smooth Terminal Hybrid)
+========================================= */
+.synth-form { width: 100%; display: flex; flex-direction: column; gap: 20px; }
+
+.synth-input-wrapper {
+  position: relative;
+  display: flex; align-items: center;
+  background: var(--input-bg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.synth-input-wrapper:focus-within {
+  border-color: var(--neon-magenta);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
+  background: rgba(20, 10, 30, 0.6);
+}
+
+.cyber-prefix {
+  font-family: var(--font-body); color: var(--neon-cyan);
+  padding-left: 15px; font-weight: bold; font-size: 1.1rem;
+}
+
+.synth-input {
+  background: transparent; border: none; outline: none;
+  color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem;
+  width: 100%; padding: 15px;
+  letter-spacing: 1px;
+}
+.synth-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+
+.synth-eye-btn {
+  color: #888; cursor: pointer;
+  padding-right: 15px; font-size: 1.2rem;
+  transition: color 0.2s;
+}
+.synth-eye-btn:hover { color: var(--neon-magenta); }
+
+/* =========================================
+   ERRORS & BUTTONS
+========================================= */
+.synth-error {
+  background: rgba(255, 51, 102, 0.15);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  color: #ffb3c6;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.95rem;
+}
+
+.synth-btn-primary {
+  width: 100%;
+  background: linear-gradient(90deg, #ff00ff, #8b5cf6);
+  color: #fff;
+  font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 2px;
+  padding: 15px; border: none; border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+.synth-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
+  filter: brightness(1.1);
+}
+
+/* =========================================
+   FOOTER
+========================================= */
+.synth-footer {
+  text-align: center; margin-top: 25px;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; color: #aaa;
+}
+
+.synth-link {
+  color: var(--neon-purple); cursor: pointer; text-decoration: underline;
+  transition: color 0.2s;
+}
+.synth-link:hover { color: var(--neon-magenta); }
+
+.synth-auth-text {
+  margin-top: 10px; font-size: 0.8rem; color: #666;
+}
+
+.system-version {
+  position: absolute; bottom: -25px; right: 0;
+  font-family: var(--font-body); font-size: 0.65rem; color: #555;
+}
+
+/* =========================================
+   REFINED GLITCH HOVER
+========================================= */
+.cyber-glitch::before, .cyber-glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: transparent;
+  opacity: 0; transition: opacity 0.3s;
+}
+.synth-title:hover.cyber-glitch::before, .synth-title:hover.cyber-glitch::after {
+  opacity: 1;
+}
+.cyber-glitch::before {
+  left: 2px; text-shadow: -1px 0 var(--neon-magenta);
+  animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
+}
+.cyber-glitch::after {
+  left: -2px; text-shadow: -1px 0 var(--neon-cyan);
+  animation: glitch-anim-2 3s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-anim-1 {
+  0% { clip-path: inset(20% 0 80% 0); }
+  20% { clip-path: inset(60% 0 10% 0); }
+  40% { clip-path: inset(40% 0 50% 0); }
+  60% { clip-path: inset(80% 0 5% 0); }
+  80% { clip-path: inset(10% 0 70% 0); }
+  100% { clip-path: inset(30% 0 20% 0); }
+}
+@keyframes glitch-anim-2 {
+  0% { clip-path: inset(10% 0 60% 0); }
+  20% { clip-path: inset(30% 0 20% 0); }
+  40% { clip-path: inset(70% 0 10% 0); }
+  60% { clip-path: inset(20% 0 50% 0); }
+  80% { clip-path: inset(90% 0 5% 0); }
+  100% { clip-path: inset(5% 0 80% 0); }
+}
+/* ===== SIGNUP FIX ===== */
+
+.dkx-main-grid {
+  width: 100%;
+}
+
+.dkx-left-col,
+.dkx-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Panels */
+.dkx-panel {
+  padding: 16px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 0, 122, 0.2);
+}
+
+/* Titles */
+.dkx-panel-title {
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #ff007a;
+}
+
+/* Rows */
+.dkx-form-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Inputs */
+.dkx-raw-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.dkx-raw-input:focus {
+  outline: 1px solid #ff007a;
+}
+
+/* Biometric */
+.dkx-biometric-panel {
+  text-align: center;
+}
+
+.dkx-hex-container {
+  width: 150px;
+  height: 150px;
+  margin: 10px auto;
+  border-radius: 12px;
+  border: 1px dashed #ff007a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.dkx-hex-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Button */
+.dkx-btn-primary {
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg,#ff007a,#7a00ff);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Responsive (IMPORTANT) */
+@media (max-width: 768px) {
+  .dkx-main-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
