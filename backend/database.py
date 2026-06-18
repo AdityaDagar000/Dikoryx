@@ -15,7 +15,10 @@ from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "sqlite:///./test.db"
+)
 
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set")
