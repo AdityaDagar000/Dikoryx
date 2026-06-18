@@ -30,7 +30,7 @@ jobs:
 
       - name: Install QA Tools
         run: |
-          pip install pytest pytest-cov ruff mypy
+          pip install pytest pytest-cov ruff mypy httpx
 
       - name: Ruff
         run: ruff check backend
