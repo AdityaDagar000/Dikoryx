@@ -6,9 +6,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, TypedDict
 
-from sqlalchemy import Column, ForeignKey, Integer, Text, TIMESTAMP, create_engine
+from sqlalchemy import (
+    Column,
+    ForeignKey,
+    Integer,
+    Text,
+    TIMESTAMP,
+    create_engine,
+    JSON,
+)
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
-from sqlalchemy.dialects.postgresql import JSONB
 from dotenv import load_dotenv
 
 # ---------------- ENV ----------------
@@ -63,7 +70,7 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     agent_id = Column(Text)
     event_type = Column(Text)
-    data = Column(JSONB)
+    data = Column(JSON)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
 
 
@@ -74,8 +81,8 @@ class RiskLog(Base):
     agent_id = Column(Text)
     risk_score = Column(Integer)
     risk_level = Column(Text)
-    reasons = Column(JSONB)
-    signals = Column(JSONB)
+    reasons = Column(JSON)
+    signals = Column(JSON)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
 
 
