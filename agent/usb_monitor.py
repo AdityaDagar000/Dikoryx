@@ -4,12 +4,11 @@ Windows-focused
 Backend-compatible event format
 """
 
-import time
 import hashlib
 import os
-import pythoncom
-import wmi
-from typing import Dict, Any
+import sys
+import time
+from typing import Any, Dict
 
 SCAN_INTERVAL = 5
 MAX_FILES_SCAN = 10000
@@ -19,13 +18,26 @@ SUSPICIOUS_EXTENSIONS = {
 }
 
 
+def _is_windows() -> bool:
+    return sys.platform == "win32"
+
+
+def _wmi_client():
+    import wmi
+
+    return wmi.WMI()
+
+
 # ==========================================================
 # DEVICE ENUMERATION (WMI SAFE)
 # ==========================================================
 
 def enumerate_usb_devices():
+    if not _is_windows():
+        return []
+
     devices = []
-    c = wmi.WMI()
+    c = _wmi_client()
 
     for dev in c.Win32_PnPEntity():
         try:
@@ -62,8 +74,11 @@ def enumerate_usb_devices():
 # ==========================================================
 
 def detect_usb_mounts():
+    if not _is_windows():
+        return []
+
     mounts = []
-    c = wmi.WMI()
+    c = _wmi_client()
 
     for disk in c.Win32_DiskDrive():
         if disk.InterfaceType != "USB":
@@ -150,6 +165,11 @@ def classify_device(device: Dict[str, Any]):
 # ==========================================================
 
 def start_usb_monitor(send_event_callback):
+    if not _is_windows():
+        print("[USB] Advanced monitor skipped (Windows only)")
+        return
+
+    import pythoncom
 
     print("[USB] Advanced monitor starting...")
 
