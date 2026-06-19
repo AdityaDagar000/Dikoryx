@@ -1,22 +1,51 @@
-"""Agent identity persistence."""
-
-from __future__ import annotations
-
 import hashlib
 import json
 import os
 import socket
 import uuid
+import platform
 from typing import Any, cast
 
+try:
+    import winreg
+except ImportError:
+    winreg = None
+
 IDENTITY_FILE = os.environ.get("ITD_IDENTITY_FILE", "agent_identity.json")
+
+
+def get_machine_guid() -> str:
+    if not winreg:
+        return "unknown-guid"
+
+    try:
+        key = winreg.OpenKey(
+            winreg.HKEY_LOCAL_MACHINE,
+            r"SOFTWARE\Microsoft\Cryptography"
+        )
+
+        guid, _ = winreg.QueryValueEx(
+            key,
+            "MachineGuid"
+        )
+
+        return str(guid)
+
+    except Exception:
+        return "unknown-guid"
 
 
 def get_device_fingerprint() -> str:
     hostname = socket.gethostname()
     mac = hex(uuid.getnode())
-    raw = f"{hostname}-{mac}"
-    return hashlib.sha256(raw.encode()).hexdigest()
+    machine_guid = get_machine_guid()
+    os_name = platform.system()
+
+    raw = f"{machine_guid}|{hostname}|{mac}|{os_name}"
+
+    return hashlib.sha256(
+        raw.encode("utf-8")
+    ).hexdigest()
 
 
 def save_identity(identity: dict[str, Any], path: str | None = None) -> dict[str, Any]:
