@@ -9,10 +9,10 @@ from backend.state import events, systems
 class TestTelemetryIngest:
     @patch("backend.api.telemetry.save_dlp_alerts")
     @patch("backend.api.telemetry.evaluate_dlp", return_value=[{"type": "T", "severity": "HIGH", "reason": "r"}])
-    @patch("backend.api.telemetry.save_event")
+    @patch("backend.api.telemetry.bulk_save_events")
     def test_ingest_processes_event_types(
         self,
-        mock_save_event,
+        mock_bulk_save_events,
         mock_evaluate_dlp,
         mock_save_dlp,
         client,
@@ -68,12 +68,16 @@ class TestTelemetryIngest:
         assert system["compliance"]["compliance_score"] == 80
         assert len(events["agent-tel"]) == 6
         mock_save_dlp.assert_called_once()
+        mock_bulk_save_events.assert_called_once()
+        pending, = mock_bulk_save_events.call_args[0]
+        assert len(pending) == 6
+        assert mock_bulk_save_events.call_args.kwargs["commit"] is False
 
     @patch("backend.api.telemetry.evaluate_dlp", return_value=[])
-    @patch("backend.api.telemetry.save_event")
+    @patch("backend.api.telemetry.bulk_save_events")
     def test_ingest_no_dlp_alerts(
         self,
-        mock_save_event,
+        mock_bulk_save_events,
         mock_evaluate_dlp,
         client,
         monkeypatch: pytest.MonkeyPatch,

@@ -14,13 +14,13 @@ VALID_AGENT = {
 
 
 @patch("backend.api.telemetry.evaluate_dlp", return_value=[])
-@patch("backend.api.telemetry.save_event")
+@patch("backend.api.telemetry.bulk_save_events")
 @patch("backend.agent_auth.touch_agent_last_seen")
 @patch("backend.agent_auth.get_agent_by_api_key")
 def test_valid_api_key(
     mock_lookup,
     mock_touch,
-    mock_save_event,
+    mock_bulk_save_events,
     mock_evaluate_dlp,
     client,
     monkeypatch: pytest.MonkeyPatch,
@@ -73,9 +73,9 @@ def test_missing_api_key(client, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @patch("backend.api.telemetry.evaluate_dlp", return_value=[])
-@patch("backend.api.telemetry.save_event")
+@patch("backend.api.telemetry.bulk_save_events")
 def test_auth_disabled_allows_legacy_agents(
-    mock_save_event,
+    mock_bulk_save_events,
     mock_evaluate_dlp,
     client,
     monkeypatch: pytest.MonkeyPatch,

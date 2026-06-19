@@ -4,7 +4,7 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, TypedDict
+from typing import Any, Optional, TypedDict
 
 from sqlalchemy import (
     Column,
@@ -15,7 +15,7 @@ from sqlalchemy import (
     create_engine,
     JSON,
 )
-from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from dotenv import load_dotenv
 
 # ---------------- ENV ----------------
@@ -26,7 +26,6 @@ DATABASE_URL = os.getenv(
     "DATABASE_URL",
     "sqlite:///./test.db"
 )
-
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL is not set")
 
@@ -157,41 +156,95 @@ def init_db():
 
 # ---------------- SAVE EVENT ----------------
 
-def save_event(agent_id: str, event_type: str, data: dict):
-    session = SessionLocal()
+class PendingEvent(TypedDict):
+    agent_id: str
+    event_type: str | None
+    data: dict[str, Any]
+
+
+def _should_commit(commit: bool | None, owns_session: bool) -> bool:
+    if commit is not None:
+        return commit
+    return owns_session
+
+
+def bulk_save_events(
+    records: list[PendingEvent],
+    *,
+    session: Session | None = None,
+    commit: bool | None = None,
+) -> None:
+    """Insert multiple events in one session; commits once when owning the session."""
+    if not records:
+        return
+
+    owns_session = session is None
+    db = session or SessionLocal()
     try:
-        event = Event(
-            agent_id=agent_id,
-            event_type=event_type,
-            data=data
+        db.add_all(
+            Event(
+                agent_id=record["agent_id"],
+                event_type=record["event_type"],
+                data=record["data"],
+            )
+            for record in records
         )
-        session.add(event)
-        session.commit()
+        if _should_commit(commit, owns_session):
+            db.commit()
     except Exception as e:
-        session.rollback()
+        db.rollback()
         print("[DB ERROR]", e)
     finally:
-        session.close()
+        if owns_session:
+            db.close()
+
+
+def save_event(
+    agent_id: str,
+    event_type: str | None,
+    data: dict[str, Any],
+    *,
+    session: Session | None = None,
+    commit: bool | None = None,
+) -> None:
+    bulk_save_events(
+        [{"agent_id": agent_id, "event_type": event_type, "data": data}],
+        session=session,
+        commit=commit,
+    )
+
 
 # ---------------- SAVE RISK LOG ----------------
 
-def save_risk_log(agent_id, risk_score, risk_level, reasons, signals):
-    session = SessionLocal()
+def save_risk_log(
+    agent_id: str,
+    risk_score: int,
+    risk_level: str,
+    reasons: Any,
+    signals: Any,
+    *,
+    session: Session | None = None,
+    commit: bool | None = None,
+) -> None:
+    owns_session = session is None
+    db = session or SessionLocal()
     try:
         log = RiskLog(
             agent_id=agent_id,
             risk_score=risk_score,
             risk_level=risk_level,
             reasons=reasons,
-            signals=signals
+            signals=signals,
         )
-        session.add(log)
-        session.commit()
+        db.add(log)
+        if _should_commit(commit, owns_session):
+            db.commit()
     except Exception as e:
-        session.rollback()
+        db.rollback()
         print("[RISK LOG ERROR]", e)
     finally:
-        session.close()
+        if owns_session:
+            db.close()
 
 
 # ---------------- DLP ALERTS ----------------
