@@ -63,6 +63,16 @@ class User(Base):
     agent_id = Column(Text, unique=True, default=lambda: f"agent-{uuid.uuid4().hex[:8]}")
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
 
+class LoginLog(Base):
+    __tablename__ = "login_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer)
+    username = Column(Text)
+    login_time = Column(TIMESTAMP, default=datetime.utcnow)
+    ip_address = Column(Text)
+    user_agent = Column(Text)
+
 class Event(Base):
     __tablename__ = "events"
 
