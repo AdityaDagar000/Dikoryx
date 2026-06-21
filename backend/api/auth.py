@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 from backend.database import SessionLocal, User
 from backend.auth_utils import hash_password, verify_password
-from datetime import datetime
-from backend.database import LoginLog
 
 router = APIRouter()
 
@@ -56,7 +54,6 @@ def signup(payload: dict):
 
 
 # ------------------ LOGIN ------------------
-# ------------------ LOGIN ------------------
 
 @router.post("/api/v1/login")
 def login(payload: dict):
@@ -65,7 +62,6 @@ def login(payload: dict):
     credentials = _require_credentials(payload)
     if credentials is None:
         return {"error": "missing fields"}
-
     username, password = credentials
 
     user = session.query(User).filter(User.username == username).first()
@@ -74,35 +70,17 @@ def login(payload: dict):
         return {"error": "user not found"}
 
     stored_hash = user.password_hash
-
     if not isinstance(stored_hash, str):
         return {"error": "invalid password"}
 
     if not verify_password(password, stored_hash):
         return {"error": "invalid password"}
 
-    # ------------------ SAVE LOGIN LOG ------------------
-
-    login_log = LoginLog(
-        user_id=user.id,
-        username=user.username,
-        login_time=datetime.utcnow(),
-        ip_address="unknown",
-        user_agent="web"
-    )
-
-    session.add(login_log)
-    session.commit()
-
-    # ------------------ RETURN USER ------------------
-
     return {
         "status": "ok",
         "agent_id": user.agent_id,
-        "user_id": user.id,
         "username": user.username,
         "name": user.name,
-        "email": user.email,
-        "department": user.department,
+        "department": user.department,   # ✅ FIXED
         "photo_url": user.photo_url
     }

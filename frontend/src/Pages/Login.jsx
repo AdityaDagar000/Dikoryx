@@ -1,141 +1,132 @@
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowRight, Eye, EyeOff, KeyRound, Lock, ShieldCheck, User } from "lucide-react";
-import { API } from "../api";
-import AuthShell, { AuthField } from "../components/AuthShell";
+import "./../styles/login.css";
+import { useNavigate } from "react-router-dom";
 
-export default function Login() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [form, setForm] = useState({ username: "", password: "", otp: "", authToken: "" });
-  const [showPassword, setShowPassword] = useState(false);
+export default function Login({ onSuccess }) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const successMessage = location.state?.message;
 
-  const updateField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
-    setError("");
-  };
+  const navigate = useNavigate();
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setIsSubmitting(true);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError("");
 
     try {
-      const data = await API.login({
-        username: form.username,
-        password: form.password,
+      const res = await fetch("http://127.0.0.1:8000/api/v1/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
       });
-      const user = data?.user || data;
-      localStorage.setItem("itd_user", JSON.stringify(user));
 
-      if (user?.agent_id) {
-        localStorage.setItem("selected_agent", user.agent_id);
+      const data = await res.json();
+
+      if (data.agent_id) {
+        const user = {
+          username: data.username,
+          agent_id: data.agent_id,
+          name: data.name,
+          department: data.department,
+          photo_url: data.photo_url
+        };
+
+        localStorage.setItem("itd_user", JSON.stringify(user));
+
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        navigate("/agents");
+
+      } else {
+        setError(data.error || "Authentication failed. Check node connection.");
       }
 
-      navigate("/dashboard");
     } catch (err) {
-      setError(err.message || "Unable to sign in. Please check your credentials.");
-    } finally {
-      setIsSubmitting(false);
+      console.error(err);
+      setError("Server error. Backend not reachable.");
     }
   };
 
   return (
-    <AuthShell
-      eyebrow="Enterprise Access"
-      title="Welcome Analyst"
-      subtitle="Secure DIKORYX sign in"
-    >
-      {successMessage && (
-        <div className="mb-5 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm text-emerald-200">
-          {successMessage}
+    <div className="synth-root">
+      {/* Subtle CRT Overlay */}
+      <div className="cyber-scanlines"></div>
+
+      <div className="synth-glass-card">
+        
+        {/* Profile Avatar */}
+        <div className="synth-avatar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
         </div>
-      )}
 
-      {error && (
-        <div className="mb-5 rounded-full border border-red-400/20 bg-red-500/10 px-5 py-3 text-sm text-red-200">
-          {error}
+        <div className="synth-header">
+          <h1 className="synth-title cyber-glitch" data-text="Dikoryx">Dikoryx</h1>
+          <p className="synth-subtitle">Prove you're not just another glitch.</p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <AuthField
-          icon={User}
-          label="Username"
-          value={form.username}
-          onChange={(value) => updateField("username", value)}
-          placeholder="agent.username"
-          autoComplete="username"
-        />
+        <form onSubmit={handleSubmit} className="synth-form">
+          
+          <div className="synth-input-wrapper">
+             <span className="cyber-prefix">&gt;</span>
+            <input
+              className="synth-input"
+              placeholder="123"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
 
-        <AuthField
-          icon={Lock}
-          label="Password"
-          type={showPassword ? "text" : "password"}
-          value={form.password}
-          onChange={(value) => updateField("password", value)}
-          placeholder="password"
-          autoComplete="current-password"
-          action={
-            <button
-              type="button"
-              onClick={() => setShowPassword((current) => !current)}
-              className="ml-3 text-white/35 transition hover:text-white"
-              aria-label={showPassword ? "Hide password" : "Show password"}
+          <div className="synth-input-wrapper">
+             <span className="cyber-prefix" style={{color: 'var(--neon-magenta)'}}>&gt;</span>
+            <input
+              className="synth-input"
+              type={showPwd ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <span 
+              className="synth-eye-btn" 
+              onClick={() => setShowPwd(!showPwd)}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          }
-        />
+              {showPwd ? "⎌" : "👁️"}
+            </span>
+          </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
-          <div className="mb-4 flex items-center justify-between text-left">
-            <div>
-              <p className="text-sm font-semibold text-white">OTP and Auth Token</p>
-              <p className="mt-1 text-xs text-white/35">Use these fields when your enterprise policy requires MFA.</p>
+          {error && (
+            <div className="synth-error">
+              {error}
             </div>
-            <ShieldCheck className="h-5 w-5 text-[#8E05C2]" />
-          </div>
+          )}
 
-          <div className="space-y-4">
-            <AuthField
-              icon={KeyRound}
-              label="OTP Code"
-              value={form.otp}
-              onChange={(value) => updateField("otp", value)}
-              placeholder="One-time password"
-              autoComplete="one-time-code"
-              required={false}
-            />
+          <button className="synth-btn-primary" type="submit">
+            LOGIN
+          </button>
+        </form>
 
-            <AuthField
-              icon={ShieldCheck}
-              label="Auth Token"
-              value={form.authToken}
-              onChange={(value) => updateField("authToken", value)}
-              placeholder="Authentication token"
-              autoComplete="off"
-              required={false}
-            />
-          </div>
+        <div className="synth-footer">
+          Don't have an account?{" "}
+          <span
+            className="synth-link"
+            onClick={() => navigate("/signup")}
+          >
+            Signup
+          </span>
+          <div className="synth-auth-text">Authorized personnel only</div>
         </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="group relative flex h-14 w-full items-center justify-center overflow-hidden rounded-full bg-gradient-to-r from-[#3E065F] via-[#700B97] to-[#8E05C2] font-semibold text-white shadow-[0_0_34px_rgba(142,5,194,0.34)] transition hover:shadow-[0_0_46px_rgba(142,5,194,0.52)] disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <span>{isSubmitting ? "Authenticating..." : "Login"}</span>
-          <ArrowRight className="absolute right-5 h-4 w-4 transition group-hover:translate-x-1" />
-        </button>
-      </form>
-
-      <p className="pt-10 text-xs leading-5 text-white/30">
-        Authorized access only. Activity may be monitored for enterprise security and compliance.
-      </p>
-    </AuthShell>
+        
+        <div className="system-version">ITD_SYS.LOGIN_VER.1.2</div>
+      </div>
+    </div>
   );
 }

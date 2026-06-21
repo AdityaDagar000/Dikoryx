@@ -10,27 +10,7 @@ function urlWithStamp(path) {
   return `${BACKEND}${path}${path.includes("?") ? "&" : "?"}_=${Date.now()}`;
 }
 
-async function postJson(path, payload) {
-  const r = await fetch(`${BACKEND}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  const data = await r.json().catch(() => ({}));
-
-  if (!r.ok || data?.error) {
-    throw new Error(data?.detail || data?.error || data?.message || "Request failed");
-  }
-
-  return data;
-}
-
 export const API = {
-  login: async (credentials) => postJson("/api/v1/login", credentials),
-  signup: async (payload) => postJson("/api/v1/signup", payload),
   listSystems: async () => {
     const r = await fetch(urlWithStamp("/api/v1/systems"), NO_CACHE);
     if (!r.ok) throw new Error("listSystems failed");
