@@ -1,7 +1,10 @@
 import Home from "./Pages/Home";
 import Pricing from "./Pages/Pricing";
 import Login from "./Pages/Login";
+import Signup from "./Pages/Signup";
+import OtpVerify from "./Pages/OtpVerify";
 import Dashboard from "./Pages/Dashboard";
+import DownloadAgent from "./Pages/DownloadAgent";
 import FooterPage from "./Pages/FooterPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -21,7 +24,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/otp-verify" element={<OtpVerify />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/download-agent" element={<DownloadAgent />} />
         <Route path="/platform/:slug" element={<FooterPage />} />
         <Route path="/company/:slug" element={<FooterPage />} />
         <Route path="/resources/:slug" element={<FooterPage />} />

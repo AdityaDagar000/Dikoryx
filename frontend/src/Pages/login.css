@@ -20,7 +20,7 @@ body, html {
   margin: 0; padding: 0;
   background-color: var(--bg-dark);
   color: #fff;
-  height: 100vh; overflow: hidden;
+  min-height: 100vh;
 }
 
 /* =========================================
@@ -180,6 +180,13 @@ body, html {
 }
 .synth-link:hover { color: var(--neon-magenta); }
 
+.synth-link-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+}
+
 .synth-auth-text {
   margin-top: 10px; font-size: 0.8rem; color: #666;
 }
@@ -228,8 +235,58 @@ body, html {
 }
 /* ===== SIGNUP FIX ===== */
 
+.dkx-signup-page {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  padding: 7rem 1.25rem 3rem;
+}
+
+.dkx-signup-card {
+  width: 950px;
+  max-width: 95%;
+  padding: 30px;
+}
+
+.dkx-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.dkx-status-badge {
+  display: inline-flex;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 0, 122, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 0, 122, 0.1);
+  color: #f0abfc;
+  padding: 7px 12px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.dkx-signup-title {
+  color: #fff;
+}
+
+.dkx-subtitle {
+  color: rgba(255, 255, 255, 0.62);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+}
+
+.dkx-signup-error {
+  margin-bottom: 18px;
+}
+
 .dkx-main-grid {
   width: 100%;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  align-items: start;
 }
 
 .dkx-left-col,
@@ -264,9 +321,10 @@ body, html {
 /* Inputs */
 .dkx-raw-input {
   flex: 1;
+  min-width: 0;
   padding: 10px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   background: rgba(255,255,255,0.08);
   color: white;
 }
@@ -296,6 +354,12 @@ body, html {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.dkx-file-input {
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.8rem;
 }
 
 /* Button */
