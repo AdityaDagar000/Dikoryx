@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
+import logo from "../assets/logo.png";
 
 export default function AuthShell({ eyebrow, title, subtitle, children, maxWidth = "max-w-md" }) {
   return (
@@ -46,7 +47,11 @@ export default function AuthShell({ eyebrow, title, subtitle, children, maxWidth
           className={`w-full ${maxWidth} text-center`}
         >
           <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_44px_rgba(142,5,194,0.36)] backdrop-blur">
-            <ShieldCheck className="h-7 w-7 text-[#8E05C2]" />
+            <img
+  src={logo}
+  alt="DRACARYX Logo"
+  className="h-10 w-10 object-contain"
+/>
           </div>
           <p className="text-xs font-medium uppercase tracking-[0.32em] text-white/45">{eyebrow}</p>
           <h1 className="mt-4 text-5xl font-black leading-tight tracking-normal text-white sm:text-6xl">

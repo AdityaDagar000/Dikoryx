@@ -1,28 +1,36 @@
 import { useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { API } from "../api";
 import "./otp.css";
 
 export default function OtpVerify() {
   const navigate = useNavigate();
   const location = useLocation();
   const inputsRef = useRef([]);
+
   const [digits, setDigits] = useState(["", "", "", ""]);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const destination = location.state?.next || "/dashboard";
   const mode = location.state?.mode || "login";
+
   const maskedTarget = useMemo(() => {
     const email = location.state?.email;
     const username = location.state?.username;
+
     if (email) return email;
-    if (username) return `${username}@dikoryx.local`;
+    if (username) return `${username}@dracaryx.local`;
+
     return "your registered email";
   }, [location.state]);
 
   const updateDigit = (index, value) => {
     const clean = value.replace(/\D/g, "").slice(-1);
+
     const next = [...digits];
     next[index] = clean;
+
     setDigits(next);
     setError("");
 
@@ -37,8 +45,9 @@ export default function OtpVerify() {
     }
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
     const code = digits.join("");
 
     if (code.length !== 4) {
@@ -46,24 +55,71 @@ export default function OtpVerify() {
       return;
     }
 
-    navigate(destination, {
-      state: {
-        message: mode === "signup" ? "Account created successfully. You can now log in." : undefined,
-      },
-    });
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await API.verifyOtp({
+        email: location.state?.email,
+        otp: code,
+      });
+
+      if (result.error) {
+        setError(result.error);
+        setLoading(false);
+        return;
+      }
+
+      localStorage.setItem(
+        "itd_user",
+        JSON.stringify({
+          user_id: result.user_id,
+          username: result.username,
+          agent_id: result.agent_id,
+          name: result.name,
+          email: result.email,
+          department: result.department,
+          photo_url: result.photo_url,
+        })
+      );
+
+      if (result.agent_id) {
+        localStorage.setItem(
+          "selected_agent",
+          result.agent_id
+        );
+      }
+
+      navigate(destination, {
+        state: {
+          message:
+            mode === "signup"
+              ? "Account created successfully. You can now log in."
+              : undefined,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      setError(err?.message || "OTP verification failed.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="otp-page">
       <div className="otp-line-field" />
+
       <section className="otp-card">
         <div className="otp-lightning" aria-hidden="true">
           &#9889;
         </div>
 
         <h1>Enter verification code</h1>
+
         <p>
-          We emailed a verification code to <strong>{maskedTarget}</strong>
+          We emailed a verification code to{" "}
+          <strong>{maskedTarget}</strong>
         </p>
 
         <form onSubmit={handleSubmit}>
@@ -75,8 +131,12 @@ export default function OtpVerify() {
                   inputsRef.current[index] = element;
                 }}
                 value={digit}
-                onChange={(event) => updateDigit(index, event.target.value)}
-                onKeyDown={(event) => handleKeyDown(index, event)}
+                onChange={(event) =>
+                  updateDigit(index, event.target.value)
+                }
+                onKeyDown={(event) =>
+                  handleKeyDown(index, event)
+                }
                 className="otp-digit"
                 inputMode="numeric"
                 maxLength={1}
@@ -85,20 +145,38 @@ export default function OtpVerify() {
             ))}
           </div>
 
-          {error && <div className="otp-error">{error}</div>}
+          {error && (
+            <div className="otp-error">
+              {error}
+            </div>
+          )}
 
-          <button type="submit" className="otp-submit">
-            Verify
+          <button
+            type="submit"
+            className="otp-submit"
+            disabled={loading}
+          >
+            {loading ? "Verifying..." : "Verify"}
           </button>
         </form>
 
         <div className="otp-resend">
-          Didn't get the code? <button type="button">Resend</button>
+          Didn't get the code?{" "}
+          <button type="button">
+            Resend
+          </button>
         </div>
 
         <p className="otp-legal">
-          By continuing, you agree to our <Link to="/resources/terms-of-service">Terms of Service</Link> &{" "}
-          <Link to="/resources/privacy-policy">Privacy Policy</Link>.
+          By continuing, you agree to our{" "}
+          <Link to="/resources/terms-of-service">
+            Terms of Service
+          </Link>{" "}
+          &{" "}
+          <Link to="/resources/privacy-policy">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </section>
     </main>

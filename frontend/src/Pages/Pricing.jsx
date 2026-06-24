@@ -1,6 +1,7 @@
 import { ArrowRight, Check, ShieldCheck, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const benefits = [
   "Advanced insider threat analytics",
@@ -40,7 +41,7 @@ export default function Pricing() {
             Security pricing built around your organization.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-gray-400">
-            DIKORYX is tailored for enterprise insider threat programs, compliance teams, and SOC workflows. Talk to us
+            DRACARYX is tailored for enterprise insider threat programs, compliance teams, and SOC workflows. Talk to us
             and we will shape deployment, support, and monitoring around your environment.
           </p>
 
@@ -69,9 +70,13 @@ export default function Pricing() {
                 <h2 className="mt-3 text-4xl font-black">Custom</h2>
                 <p className="mt-2 text-gray-400">For enterprise organizations</p>
               </div>
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-500/15 text-purple-200">
-                <ShieldCheck size={28} />
-              </div>
+              <div className="logo-box">
+  <img
+    src={logo}
+    alt="DRACARYX Logo"
+    className="h-10 w-10 object-contain"
+  />
+</div>
             </div>
 
             <div className="my-7 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />

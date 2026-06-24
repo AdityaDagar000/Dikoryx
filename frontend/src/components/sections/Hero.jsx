@@ -25,7 +25,7 @@ export default function Hero() {
       "linear-gradient(to top,#FFFFFF,#E9D5FF,#C084FC,#A855F7)",
   }}
 >
-  DIKORYX
+  DRACARYX
 </motion.h1>
     </LampContainer>
   );

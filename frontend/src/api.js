@@ -20,10 +20,9 @@ function urlWithStamp(path) {
 }
 
 async function postJson(path, payload) {
-  // In development, a missing route on the deployed service can be retried
-  // through Vite's /api proxy against the current local backend.
-  const bases = import.meta.env.DEV && BACKEND ? [BACKEND, ""] : [BACKEND];
-  let deployedRouteMissing = false;
+  // In development, prefer Vite's /api proxy so localhost talks to the
+  // backend you are actively running instead of a stale Render deployment.
+  const bases = import.meta.env.DEV && BACKEND ? ["", BACKEND] : [BACKEND];
 
   for (let index = 0; index < bases.length; index += 1) {
     let r;
@@ -37,17 +36,16 @@ async function postJson(path, payload) {
         body: JSON.stringify(payload),
       });
     } catch (error) {
-      if (deployedRouteMissing) {
-        throw new ApiError(`Backend endpoint unavailable: ${path}`, { path });
+      if (index < bases.length - 1) {
+        continue;
       }
       throw error;
     }
 
     const data = await r.json().catch(() => ({}));
-    const canRetryLocally = r.status === 404 && index < bases.length - 1;
+    const canRetryNextBackend = r.status === 404 && index < bases.length - 1;
 
-    if (canRetryLocally) {
-      deployedRouteMissing = true;
+    if (canRetryNextBackend) {
       continue;
     }
 
@@ -88,33 +86,60 @@ async function getJson(path) {
 
 export const API = {
   backendUrl: BACKEND,
-  login: async (credentials) => postJson("/api/v1/login", credentials),
-  signup: async (payload) => postJson("/api/v1/signup", payload),
-  createOrganization: async (payload) => postJson("/api/v1/organizations", payload),
-  listOrganizations: async () => getJson("/api/v1/organizations"),
-  getOrganization: async (id) => getJson(`/api/v1/organizations/${encodeURIComponent(id)}`),
+
+  login: async (credentials) =>
+    postJson("/api/v1/login", credentials),
+
+  signup: async (payload) =>
+    postJson("/api/v1/signup", payload),
+
+  verifyOtp: async (payload) =>
+    postJson("/api/v1/verify-otp", payload),
+
+  createOrganization: async (payload) =>
+    postJson("/api/v1/organizations", payload),
+
+  listOrganizations: async () =>
+    getJson("/api/v1/organizations"),
+
+  getOrganization: async (id) =>
+    getJson(`/api/v1/organizations/${encodeURIComponent(id)}`),
+
   listSystems: async () => {
     const r = await fetch(urlWithStamp("/api/v1/systems"), NO_CACHE);
     if (!r.ok) throw new Error("listSystems failed");
     return await r.json();
   },
+
   getSystem: async (id) => {
-    const r = await fetch(urlWithStamp(`/api/v1/system/${encodeURIComponent(id)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/system/${encodeURIComponent(id)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getSystem failed");
     return await r.json();
   },
+
   getAllRisk: async () => {
     const r = await fetch(urlWithStamp("/api/v1/risk"), NO_CACHE);
     if (!r.ok) throw new Error("getAllRisk failed");
     return await r.json();
   },
+
   getRisk: async (agentId) => {
-    const r = await fetch(urlWithStamp(`/api/v1/risk/${encodeURIComponent(agentId)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/risk/${encodeURIComponent(agentId)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getRisk failed");
     return await r.json();
   },
+
   getDlpAlerts: async (agentId) => {
-    const r = await fetch(urlWithStamp(`/api/v1/dlp/${encodeURIComponent(agentId)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/dlp/${encodeURIComponent(agentId)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getDlpAlerts failed");
     return await r.json();
   },

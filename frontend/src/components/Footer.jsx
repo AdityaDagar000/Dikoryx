@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Github, Linkedin, Mail, MapPin, Phone, ShieldCheck, Twitter } from "lucide-react";
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const footerLinks = [
   {
@@ -50,19 +51,25 @@ export default function Footer() {
       >
         <div>
           <Link to="/" className="inline-flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-purple-400/20 bg-purple-500/10 shadow-[0_0_32px_rgba(142,5,194,0.28)]">
-              <ShieldCheck className="h-6 w-6 text-[#8E05C2]" />
-            </span>
-            <span className="text-2xl font-black tracking-normal">DIKORYX</span>
-          </Link>
+  <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-purple-400/20 bg-purple-500/10 shadow-[0_0_32px_rgba(142,5,194,0.28)] overflow-hidden">
+    <img
+      src={logo}
+      alt="DIKORYX Logo"
+      className="h-7 w-7 object-contain"
+    />
+  </span>
+
+  <span className="text-2xl font-black tracking-normal">
+    DIKORYX
+  </span>
+</Link>
           <p className="mt-5 max-w-md text-sm leading-6 text-gray-400">
             Enterprise insider threat detection, user behavior analytics, and compliance intelligence for modern
             security teams.
           </p>
 
           <div className="mt-7 space-y-4 text-sm text-gray-300">
-            <ContactLine icon={Mail} label="security@dikoryx.com" />
-            <ContactLine icon={Phone} label="+1 (555) 012-4587" />
+            <ContactLine icon={Mail} label="dracaryx0@gmail.com" />
             <ContactLine icon={MapPin} label="Enterprise Security Operations" />
           </div>
 
@@ -96,7 +103,7 @@ export default function Footer() {
       </motion.div>
 
       <div className="relative z-10 mx-auto mt-12 flex max-w-7xl flex-col gap-4 border-t border-white/10 pt-6 text-xs text-gray-500 md:flex-row md:items-center md:justify-between">
-        <p>&copy; {new Date().getFullYear()} DIKORYX. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} DRACARYX. All rights reserved.</p>
         <p>Built for enterprise monitoring, risk visibility, and secure operations.</p>
       </div>
     </footer>

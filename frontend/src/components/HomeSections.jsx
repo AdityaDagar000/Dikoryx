@@ -1,6 +1,8 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
+import devanshImage from "../assets/devansh.png";
+import adityaImage from "../assets/aditya.png";
 import {
   Mail,
   MapPin,
@@ -12,22 +14,18 @@ const fadeIn = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.55 } },
 };
-
 const ceoMessages = [
   {
     quote: "Big effort - high quality. Best Framer content out there.",
-    author: "CEO One",
-    image:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80&auto=format&fit=crop",
-    alt: "Portrait of CEO One",
+    author: "Devansh Goyal",
+    image: devanshImage,
+    alt: "Devansh Goyal",
   },
   {
-    quote:
-      "I'm building a new website and it's absolutely ridiculous how valuable your content has been.",
-    author: "CEO Two",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80&auto=format&fit=crop",
-    alt: "Portrait of CEO Two",
+    quote: "I'm building a new website and it's absolutely ridiculous how valuable your content has been.",
+    author: "Aditya Dagar",
+    image: adityaImage,
+    alt: "Aditya Dagar",
   },
 ];
 
@@ -173,13 +171,7 @@ function ContactSection() {
             <ContactItem
               icon={Mail}
               title="Email Us"
-              text="security@dikoryx.com"
-            />
-
-            <ContactItem
-              icon={Phone}
-              title="Call Us"
-              text="+1 (555) 012-4587"
+              text="dracaryx0@gmail.com"
             />
           </div>
         </div>
@@ -234,18 +226,23 @@ function ContactSection() {
               }
             />
 
-            <textarea
-              className="ContactInput min-h-[130px] resize-none rounded-2xl py-4"
-              placeholder="How can we help?"
-              value={formData.message}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  message: e.target.value,
-                })
-              }
-              required
-            />
+          <textarea
+  style={{
+    paddingTop: "45px",
+    paddingLeft: "28px",
+    textAlign: "left",
+  }}
+  className="ContactInput min-h-[130px] resize-none rounded-2xl"
+  placeholder="How can we help?"
+  value={formData.message}
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      message: e.target.value,
+    })
+  }
+  required
+/>
           </div>
 
           <button

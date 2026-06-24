@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ArrowRight, Eye, EyeOff, Lock, User } from "lucide-react";
 import { API } from "../api";
 import AuthShell, { AuthField } from "../components/AuthShell";
+import logo from "../assets/logo.png";
 
 function getFriendlyAuthError(error) {
   const message = (error?.message || "").toLowerCase();
@@ -52,22 +53,6 @@ export default function Login() {
         password: form.password,
       });
 
-      const user = {
-        user_id: data.user_id,
-        username: data.username,
-        agent_id: data.agent_id,
-        name: data.name,
-        email: data.email,
-        department: data.department,
-        photo_url: data.photo_url,
-      };
-
-      localStorage.setItem("itd_user", JSON.stringify(user));
-
-      if (data.agent_id) {
-        localStorage.setItem("selected_agent", data.agent_id);
-      }
-
       navigate("/otp-verify", {
         state: {
           email: data.email,
@@ -87,7 +72,7 @@ export default function Login() {
     <AuthShell
       eyebrow="Enterprise Access"
       title="Welcome Analyst"
-      subtitle="Secure DIKORYX sign in"
+      subtitle="Secure DRACARYX sign in"
     >
       {successMessage && (
         <div className="mb-5 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm text-emerald-200">
@@ -155,7 +140,7 @@ export default function Login() {
       </p>
 
       <p className="pt-10 text-xs leading-5 text-white/30">
-        Connected to the DIKORYX backend. Authorized access only.
+        Connected to the DRACARYX backend. Authorized access only.
       </p>
     </AuthShell>
   );
