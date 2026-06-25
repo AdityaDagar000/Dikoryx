@@ -16,7 +16,7 @@ const fadeIn = {
 };
 const ceoMessages = [
   {
-    quote: "Big effort - high quality. Best Framer content out there.",
+    quote: "History is cretead by those who leave no browsing history",
     author: "Devansh Goyal",
     image: devanshImage,
     alt: "Devansh Goyal",

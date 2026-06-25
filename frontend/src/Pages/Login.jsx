@@ -35,7 +35,7 @@ export default function Login() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const successMessage = location.state?.message;
-  const nextPath = location.state?.next || "/dashboard";
+  const nextPath = location.state?.next || "/welcome";
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));

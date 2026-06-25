@@ -1,63 +1,43 @@
 import { motion } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
 import logo from "../assets/logo.png";
+import bgVideo from "../assets/bg.mp4";
+import "../styles/login.css";
 
 export default function AuthShell({ eyebrow, title, subtitle, children, maxWidth = "max-w-md" }) {
   return (
-    <main className="relative flex min-h-screen overflow-hidden bg-black px-5 py-24 text-white">
-      <div className="absolute inset-0 bg-black" />
-      <div
-        className="absolute inset-0 opacity-55"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle, rgba(142,5,194,0.48) 1px, transparent 1.4px)",
-          backgroundSize: "18px 18px",
-          maskImage:
-            "radial-gradient(circle at center, black 0%, black 28%, transparent 78%)",
-          WebkitMaskImage:
-            "radial-gradient(circle at center, black 0%, black 28%, transparent 78%)",
-        }}
-      />
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.78) 60%, #000 100%)",
-        }}
-      />
-      <motion.div
-        className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[130px]"
-        animate={{ opacity: [0.18, 0.34, 0.18], scale: [0.94, 1.04, 0.94] }}
-        transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        style={{ backgroundColor: "#700B97" }}
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 h-1/2"
-        style={{
-          background:
-            "linear-gradient(to top, #000 0%, rgba(62,6,95,0.2) 48%, transparent 100%)",
-        }}
-      />
+    <main className="auth-video-page relative flex min-h-screen overflow-hidden bg-[#020104] px-5 py-24 text-white">
+      {/* 1. Unified Background: 75% brightness is the sweet spot for dark mode glass */}
+      <video
+        className="auth-bg-video brightness-75 saturate-[1.3] contrast-[1.15]"
+        autoPlay
+        loop
+        muted
+        playsInline
+        preload="auto"
+        aria-hidden="true"
+      >
+        <source src={bgVideo} type="video/mp4" />
+      </video>
+      
+      {/* Subtle vignette overlay instead of a heavy dark wash */}
+      <div className="absolute inset-0 z-[1] bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.5)_100%)]" />
 
       <section className="relative z-10 mx-auto flex w-full flex-1 items-center justify-center">
         <motion.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease: "easeOut" }}
-          className={`w-full ${maxWidth} text-center`}
+          /* 2. Unified Card: 35% opacity deep purple, 24px blur (backdrop-blur-xl) */
+          className={`auth-transparent-card w-full ${maxWidth} rounded-[24px] border border-white/10 border-t-white/20 bg-[#0f081e]/35 px-8 py-10 text-center shadow-[0_24px_64px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.1)] backdrop-blur-xl`}
         >
-          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] shadow-[0_0_44px_rgba(142,5,194,0.36)] backdrop-blur">
-            <img
-  src={logo}
-  alt="DRACARYX Logo"
-  className="h-10 w-10 object-contain"
-/>
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/20 border-t-white/40 bg-white/[0.04] shadow-[0_8px_16px_rgba(0,0,0,0.4),0_0_30px_rgba(142,5,194,0.3)] backdrop-blur-md">
+            <img src={logo} alt="DRACARYX Logo" className="h-8 w-8 object-contain" />
           </div>
-          <p className="text-xs font-medium uppercase tracking-[0.32em] text-white/45">{eyebrow}</p>
-          <h1 className="mt-4 text-5xl font-black leading-tight tracking-normal text-white sm:text-6xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-[#C084FC]">{eyebrow}</p>
+          <h1 className="mt-3 text-4xl font-black leading-tight tracking-normal text-white sm:text-5xl">
             {title}
           </h1>
-          <p className="mt-3 text-2xl font-light text-white/55 sm:text-3xl">{subtitle}</p>
+          <p className="mt-2 text-lg font-light text-white/60">{subtitle}</p>
 
           <div className="mt-9">{children}</div>
         </motion.div>
@@ -66,27 +46,29 @@ export default function AuthShell({ eyebrow, title, subtitle, children, maxWidth
   );
 }
 
-export function AuthField({
-  icon: Icon,
-  label,
-  value,
-  onChange,
-  type = "text",
-  placeholder,
-  autoComplete,
-  action,
-  required = true,
-}) {
+export function AuthField({ icon: Icon, label, value, onChange, type = "text", placeholder, autoComplete, action, required = true }) {
   return (
-    <label className="block text-left">
+    <label className="block text-left mb-4">
       <span className="sr-only">{label}</span>
-      <div className="group flex h-14 items-center rounded-full border border-white/10 bg-black/35 px-5 shadow-[inset_0_0_24px_rgba(255,255,255,0.03)] backdrop-blur-md transition focus-within:border-[#8E05C2]/70 focus-within:bg-black/55 focus-within:shadow-[0_0_26px_rgba(142,5,194,0.18)]">
-        {Icon && <Icon className="mr-3 h-4 w-4 text-white/35 transition group-focus-within:text-[#8E05C2]" />}
+      <div
+        className="
+          group flex h-[50px] items-center rounded-xl
+          border border-white/5
+          bg-black/20
+          px-4
+          shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]
+          transition-all duration-200
+          focus-within:border-[#C084FC]/50
+          focus-within:bg-black/30
+          focus-within:shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_0_0_2px_rgba(192,132,252,0.15)]
+        "
+      >
+        {Icon && <Icon className="mr-3 h-4 w-4 text-white/40 transition group-focus-within:text-[#C084FC]" />}
         <input
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-full w-full bg-transparent text-center text-white outline-none placeholder:text-white/35 sm:text-left"
+          className="h-full w-full bg-transparent text-sm text-white/90 outline-none placeholder:text-white/30"
           placeholder={placeholder}
           autoComplete={autoComplete}
           required={required}

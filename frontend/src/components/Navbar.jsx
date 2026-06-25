@@ -22,17 +22,33 @@ function readUser() {
     return null;
   }
 }
-
+const getUserTheme = (name) => {
+  const THEMES = [
+    "bg-[#3E065F]", // DRACARYX Deep Purple
+    "bg-[#1e3a8a]", // Royal Blue
+    "bg-[#064e3b]", // Emerald
+    "bg-[#831843]", // Rose
+    "bg-[#b45309]", // Amber
+    "bg-[#0f172a]", // Slate
+  ];
+  if (!name) return THEMES[0];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return THEMES[Math.abs(hash) % THEMES.length];
+};
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [contactExpanded, setContactExpanded] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const user = useMemo(() => readUser(), [location.pathname, location.key]);
-
+const userThemeBg = useMemo(() => getUserTheme(user?.name || user?.username), [user]);
+  const initial = (user?.name?.[0] || user?.username?.[0] || "U").toUpperCase();
   const tabs = [
     { title: "Home", icon: Shield, path: "/" },
-    { title: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
+    { title: "Dashboard", icon: LayoutDashboard, path: "/welcome" },
     { title: "Download", icon: Download, path: "/download-agent" },
     { title: "Pricing", icon: DollarSign, path: "/pricing" },
     ...(!user
@@ -114,63 +130,70 @@ export default function Navbar() {
 
       {user && (
         <div className="fixed right-6 top-5 z-[100000]">
+          {/* THE SLEEK OUTER TRIGGER BUTTON */}
           <button
             type="button"
             onClick={() => setProfileOpen((current) => !current)}
-            className="flex items-center gap-3 rounded-2xl border border-purple-500/20 bg-black/70 px-3 py-2 text-white shadow-[0_0_25px_rgba(168,85,247,0.15)] backdrop-blur-xl transition hover:border-purple-400/50"
+            className="flex items-center gap-2.5 rounded-full border border-white/5 bg-[#0a0514]/90 pl-1.5 pr-3 py-1.5 text-white shadow-[0_0_20px_rgba(0,0,0,0.5)] backdrop-blur-xl transition hover:bg-[#150a29]"
           >
-            <span className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-purple-500/10">
-              {user.photo_url ? (
-                <img src={user.photo_url} alt={user.name || user.username} className="h-full w-full object-cover" />
-              ) : (
-                <UserCircle className="h-6 w-6 text-[#C084FC]" />
-              )}
+            <span className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold text-white shadow-inner ${userThemeBg}`}>
+              {initial}
             </span>
-            <span className="hidden max-w-[140px] truncate text-sm font-semibold md:block">
+            <span className="hidden max-w-[120px] truncate text-sm font-medium md:block">
               {user.name || user.username}
             </span>
-            <ChevronDown size={16} className={`transition ${profileOpen ? "rotate-180" : ""}`} />
+            <ChevronDown size={16} className={`ml-1 text-white/50 transition ${profileOpen ? "rotate-180" : ""}`} />
           </button>
 
+          {/* THE CLEANED UP DROPDOWN MENU */}
           {profileOpen && (
-            <div className="absolute right-0 mt-3 w-80 overflow-hidden rounded-2xl border border-purple-500/20 bg-black/90 p-4 text-white shadow-[0_24px_80px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-purple-500/10">
-                  {user.photo_url ? (
-                    <img src={user.photo_url} alt={user.name || user.username} className="h-full w-full object-cover" />
-                  ) : (
-                    <UserCircle className="h-7 w-7 text-[#C084FC]" />
-                  )}
+            <div className="absolute right-0 mt-3 w-[280px] rounded-xl border border-white/10 bg-[#0a0514]/95 p-1.5 shadow-[0_24px_80px_rgba(0,0,0,0.8),0_0_0_1px_rgba(192,132,252,0.1)] backdrop-blur-3xl text-white">
+              
+              {/* Header */}
+              <div className="flex items-center gap-3 px-3 py-3">
+                <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white shadow-inner ${userThemeBg}`}>
+                  {initial}
                 </span>
-                <div className="min-w-0">
-                  <p className="truncate font-bold">{user.name || user.username}</p>
-                  <p className="truncate text-sm text-gray-500">{user.email || user.department || "DIKORYX Analyst"}</p>
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate text-base font-bold">{user.name || user.username}</span>
+                  <span className="truncate text-xs text-gray-500">{user.email || `${user.username}@dracaryx.local`}</span>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-3 text-sm">
-                <ProfileLine label="Username" value={user.username} />
-                <ProfileLine label="Agent ID" value={user.agent_id} />
-                <ProfileLine label="Department" value={user.department || "Security Operations"} />
+              <div className="my-1 mx-1 border-t border-white/5" />
+
+              {/* Menu Items */}
+              <div className="flex flex-col p-1 gap-1">
+                {/* Read-only Department */}
+                <div className="flex items-center gap-3 rounded-lg px-2 py-2 text-sm text-gray-300">
+                  <Shield size={16} className="text-gray-500" />
+                  <span className="flex-1">Department</span>
+                  <span className="text-xs text-gray-500">{user.department || "Security"}</span>
+                </div>
+
+                {/* Dashboard Action */}
+                <button
+                  onClick={() => { setProfileOpen(false); navigate("/welcome"); }}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-gray-300 transition-colors hover:bg-white/10 hover:text-white"
+                >
+                  <LayoutDashboard size={16} className="text-gray-400" />
+                  <span>Dashboard</span>
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => navigate("/download-agent")}
-                className="mt-4 flex w-full items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left text-sm text-gray-300 transition hover:border-purple-400/50 hover:text-white"
-              >
-                <Info size={16} />
-                More information and agent download
-              </button>
+              <div className="my-1 mx-1 border-t border-white/5" />
 
-              <button
-                type="button"
-                onClick={signOut}
-                className="mt-3 flex w-full items-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-left text-sm font-semibold text-red-200 transition hover:bg-red-500/20"
-              >
-                <LogOut size={16} />
-                Sign out
-              </button>
+              {/* Logout Action */}
+              <div className="p-1">
+                <button
+                  onClick={signOut}
+                  className="flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+                >
+                  <LogOut size={16} />
+                  <span>Log out</span>
+                </button>
+              </div>
+
             </div>
           )}
         </div>

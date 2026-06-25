@@ -18,6 +18,13 @@ import { useState, useId } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "../components/ui/input-otp";
+import logo from "../assets/logo.png"; /* Add this line */
+import {
   ArrowRight,
   Building2,
   Eye,
@@ -28,10 +35,10 @@ import {
   Lock,
   Mail,
   Phone,
-  Shield,
   User,
 } from "lucide-react";
 import { API } from "../api";
+import bgVideo from "../assets/bg.mp4";
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -141,7 +148,9 @@ function HumanCheck({ checked, onChange }) {
         className="signup-captcha__box"
         required
       />
-      <span className="signup-captcha__label">I am not a robot</span>
+      <span className="signup-captcha__label">
+        I hereby confirm that all the information provided by me is correct.
+      </span>
     </label>
   );
 }
@@ -181,7 +190,7 @@ export default function Signup() {
     setError("");
 
     if (!humanChecked) {
-      setError("Please confirm you are not a robot.");
+      setError("Please confirm that the information provided is correct.");
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -239,64 +248,58 @@ export default function Signup() {
           align-items: flex-start;
           justify-content: center;
           padding: 48px 16px 64px;
-          background:
-            radial-gradient(ellipse 80% 60% at 50% -10%, #1a0a3e 0%, transparent 70%),
-            radial-gradient(ellipse 60% 50% at 80% 80%,  #0a0a2e 0%, transparent 60%),
-            #040814;
+          background: #020104;
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
           -webkit-font-smoothing: antialiased;
+          position: relative;
+          overflow: hidden;
         }
 
-        /* Noise texture */
+        .signup-bg-video {
+          position: fixed;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 1;
+          /* FIX: Perfect match to the 75% brightness of the Login page */
+          filter: brightness(0.75) saturate(1.3) contrast(1.15);
+          z-index: 0;
+          pointer-events: none;
+        }
+
+        /* Subtle vignette overlay (matches the Login radial gradient) */
         .signup-page::before {
           content: "";
           position: fixed;
           inset: 0;
-          opacity: 0.03;
-          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          background: radial-gradient(circle at center, transparent 0%, rgba(0, 0, 0, 0.5) 100%);
           pointer-events: none;
-          z-index: 0;
+          z-index: 1;
         }
 
         /* ── Card ─────────────────────────────────────────────────── */
         .signup-card {
           position: relative;
-          z-index: 1;
+          z-index: 2;
           width: 100%;
           max-width: 680px;
           border-radius: 24px;
-          border: 1px solid rgba(255,255,255,0.08);
-          background: rgba(255,255,255,0.04);
-          backdrop-filter: blur(32px) saturate(140%);
-          -webkit-backdrop-filter: blur(32px) saturate(140%);
-          box-shadow:
-            0 0 0 1px rgba(108,99,255,0.12) inset,
-            0 32px 80px rgba(0,0,0,0.6),
-            0 0 60px rgba(108,99,255,0.08);
           padding: 40px 40px 36px;
           overflow: hidden;
+          
+          /* FIX: Exact Glass formula from Login */
+          background: rgba(15, 8, 30, 0.35);
+          backdrop-filter: blur(24px) saturate(1.2);
+          -webkit-backdrop-filter: blur(24px) saturate(1.2);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-top: 1px solid rgba(255, 255, 255, 0.2);
+          box-shadow:
+            inset 0 1px 1px rgba(255, 255, 255, 0.1),
+            0 24px 64px rgba(0, 0, 0, 0.5);
         }
 
-        /* Glow orbs */
-        .signup-card::before {
-          content: "";
-          position: absolute;
-          top: -80px; right: -80px;
-          width: 280px; height: 280px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(108,99,255,0.18) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .signup-card::after {
-          content: "";
-          position: absolute;
-          bottom: -100px; left: -60px;
-          width: 260px; height: 260px;
-          border-radius: 50%;
-          background: radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 70%);
-          pointer-events: none;
-        }
-
+        /* (Be sure you removed the .signup-card::before and ::after glow orbs from the previous code entirely!) */
         /* ── Header ───────────────────────────────────────────────── */
         .signup-header {
           display: flex;
@@ -308,12 +311,22 @@ export default function Signup() {
           display: flex;
           align-items: center;
           justify-content: center;
-          width: 44px; height: 44px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, #6C63FF 0%, #8B5CF6 100%);
-          box-shadow: 0 0 24px rgba(108,99,255,0.4);
-          color: #fff;
+          width: 48px; height: 48px;
+          border-radius: 14px;
+          /* Glassmorphic border and background to match Login page */
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          border-top: 1px solid rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.04);
+          box-shadow: 0 8px 16px rgba(0,0,0,0.3), 0 0 24px rgba(142,5,194,0.25);
+          backdrop-filter: blur(8px);
+          -webkit-backdrop-filter: blur(8px);
           flex-shrink: 0;
+        }
+        
+        .signup-logo img {
+          width: 26px;
+          height: 26px;
+          object-fit: contain;
         }
         .signup-brand { flex: 1; }
         .signup-brand__name {
@@ -337,7 +350,8 @@ export default function Signup() {
           font-weight: 600;
           letter-spacing: 0.12em;
           text-transform: uppercase;
-          color: rgba(108,99,255,0.8);
+          /* Updated to DRACARYX Purple */
+          color: #C084FC; 
           margin: 24px 0 14px;
         }
         .signup-section-title:first-of-type { margin-top: 0; }
@@ -346,7 +360,7 @@ export default function Signup() {
         .signup-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 12px;
+          gap: 14px; /* Slightly increased gap to let the inputs breathe */
         }
         .signup-grid--full {
           grid-column: 1 / -1;
@@ -357,48 +371,64 @@ export default function Signup() {
         }
 
         /* ── Field ────────────────────────────────────────────────── */
-        .signup-field { display: flex; flex-direction: column; gap: 5px; }
+        .signup-field { display: flex; flex-direction: column; gap: 6px; }
         .signup-field__label {
           font-size: 11.5px;
           font-weight: 500;
           letter-spacing: 0.03em;
-          color: rgba(255,255,255,0.5);
+          color: rgba(255,255,255,0.6); /* Slightly brighter for readability */
         }
-        .signup-field__required { color: #6C63FF; margin-left: 2px; }
+        .signup-field__required { color: #C084FC; margin-left: 2px; }
+        
         .signup-field__control {
           display: flex;
           align-items: center;
-          border-radius: 10px;
-          border: 1px solid rgba(255,255,255,0.09);
-          background: rgba(255,255,255,0.04);
-          transition: border-color 0.18s, box-shadow 0.18s;
+          border-radius: 12px;
+          /* Recessed Glassmorphism to match AuthShell */
+          background: rgba(0, 0, 0, 0.2);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+          transition: all 0.2s ease;
+          height: 48px; /* Fixed height for uniformity */
         }
         .signup-field__control:focus-within {
-          border-color: rgba(108,99,255,0.5);
-          box-shadow: 0 0 0 3px rgba(108,99,255,0.12);
+          background: rgba(0, 0, 0, 0.3);
+          border-color: rgba(192, 132, 252, 0.5); /* #C084FC */
+          box-shadow: 
+            inset 0 2px 4px rgba(0, 0, 0, 0.3),
+            0 0 0 2px rgba(192, 132, 252, 0.15);
         }
+        
         .signup-field__icon {
           display: flex;
           align-items: center;
-          padding: 0 10px;
-          color: rgba(255,255,255,0.25);
+          padding: 0 12px;
+          color: rgba(255,255,255,0.3);
           flex-shrink: 0;
+          transition: color 0.2s ease;
         }
+        /* Icon lights up purple when the field is active */
+        .signup-field__control:focus-within .signup-field__icon {
+          color: #C084FC;
+        }
+        
         .signup-field__input {
           flex: 1;
           background: transparent;
           border: none;
           outline: none;
           font-size: 13.5px;
-          color: rgba(255,255,255,0.88);
-          padding: 10px 12px 10px 0;
+          color: rgba(255,255,255,0.9);
+          padding: 0 12px 0 0;
           min-width: 0;
+          height: 100%;
         }
-        .signup-field__input::placeholder { color: rgba(255,255,255,0.22); }
+        .signup-field__input::placeholder { color: rgba(255,255,255,0.25); }
+        
         .signup-field__suffix {
           display: flex;
           align-items: center;
-          padding-right: 10px;
+          padding-right: 12px;
           flex-shrink: 0;
         }
         .signup-field__eye {
@@ -411,12 +441,13 @@ export default function Signup() {
           padding: 2px;
           transition: color 0.15s;
         }
-        .signup-field__eye:hover { color: rgba(255,255,255,0.65); }
+        .signup-field__eye:hover { color: #C084FC; }
 
         /* ── Captcha ──────────────────────────────────────────────── */
+        /* ── Captcha / Consent ────────────────────────────────────── */
         .signup-captcha {
           display: flex;
-          align-items: center;
+          align-items: flex-start; /* Keeps checkbox at the top if text wraps */
           gap: 10px;
           margin-top: 20px;
           cursor: pointer;
@@ -424,7 +455,8 @@ export default function Signup() {
         }
         .signup-captcha__box {
           width: 16px; height: 16px;
-          accent-color: #6C63FF;
+          margin-top: 2px;
+          accent-color: #C084FC; /* Changed from #6C63FF */
           cursor: pointer;
           flex-shrink: 0;
         }
@@ -511,6 +543,17 @@ export default function Signup() {
 
       {/* ── Page ───────────────────────────────────────────────────────── */}
       <div className="signup-page">
+        <video
+          className="signup-bg-video"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source src={bgVideo} type="video/mp4" />
+        </video>
         <motion.div
           className="signup-card"
           initial={{ opacity: 0, y: 24 }}
@@ -520,11 +563,11 @@ export default function Signup() {
           {/* Header */}
           <div className="signup-header">
             <div className="signup-logo">
-              <Shield size={22} />
+              <img src={logo} alt="DRACARYX Logo" />
             </div>
             <div className="signup-brand">
-              <div className="signup-brand__name">DIKORYX</div>
-              <div className="signup-brand__sub">Insider Threat Detection</div>
+              <div className="signup-brand__name">DRACARYX</div>
+              <div className="signup-brand__sub">Enterprise Access</div>
             </div>
           </div>
 
@@ -608,15 +651,35 @@ export default function Signup() {
                 autoComplete="organization"
                 required
               />
-              <Field
-                icon={Hash}
-                label="Company Auth Token"
-                value={form.company_auth_token}
-                onChange={set("company_auth_token")}
-                placeholder="Issued by your administrator"
-                autoComplete="off"
-                required
-              />
+              
+              {/* NEW: 8-Digit Glassmorphic OTP Input */}
+              <div className="signup-field">
+                <label className="signup-field__label">
+                  Company Auth Token<span className="signup-field__required">*</span>
+                </label>
+                <div className="pt-1">
+                  <InputOTP 
+                    maxLength={8} 
+                    value={form.company_auth_token}
+                    onChange={set("company_auth_token")}
+                    pattern="^[a-zA-Z0-9]+$" // Allows alphanumeric codes
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                    </InputOTPGroup>
+                    <InputOTPSeparator />
+                    <InputOTPGroup>
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                      <InputOTPSlot index={6} />
+                      <InputOTPSlot index={7} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+              </div>
             </div>
 
             {/* ── Section: Credentials ──────────────────────────────── */}

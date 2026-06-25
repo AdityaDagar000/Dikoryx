@@ -1,22 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, Terminal } from "lucide-react";
 import { API } from "../api";
+import { PixelCanvas } from "../components/ui/pixel-canvas";
+import FallbackAvatar from "../components/ui/fallback-avatar";
 
 export default function AgentSelect() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const navigate = useNavigate();
 
   const loadAgents = async () => {
     try {
       const systemsRes = await API.listSystems();
-
-      // Normalize response
-      const list = Array.isArray(systemsRes)
-        ? systemsRes
-        : systemsRes?.systems || [];
-
+      const list = Array.isArray(systemsRes) ? systemsRes : systemsRes?.systems || [];
       setAgents(list);
     } catch (err) {
       console.error("Agent fetch failed", err);
@@ -35,139 +32,92 @@ export default function AgentSelect() {
   };
 
   return (
-  <div style={{
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    background: `
-  linear-gradient(rgba(5,0,20,0.8), rgba(5,0,20,0.9)),
-  url('/src/assets/cyberpunk-bg.jpg')
-`,
-backgroundSize: "cover",
-backgroundPosition: "center",
-    color: "#fff",
-    fontFamily: "Orbitron, sans-serif",
-    position: "relative",
-    overflow: "hidden"
-  }}>
-
-    {/* Background glow */}
-    <div style={{
-      position: "absolute",
-      top: "-20%",
-      width: "800px",
-      height: "800px",
-      background: "radial-gradient(circle, rgba(0,240,255,0.15), transparent 70%)",
-      filter: "blur(80px)"
-    }} />
-
-    <div style={{
-      width: "650px",
-      padding: "2rem",
-      borderRadius: "20px",
-      background: "rgba(10,10,20,0.7)",
-      backdropFilter: "blur(20px)",
-      border: "1px solid rgba(0,240,255,0.2)",
-      boxShadow: "0 0 40px rgba(0,240,255,0.15)",
-      position: "relative",
-      zIndex: 2
-    }}>
-
-      <h2 style={{
-        marginBottom: "0.5rem",
-        letterSpacing: "1px"
-      }}>
-        Active Agents
-      </h2>
-
-      <p style={{
-        fontSize: "0.8rem",
-        opacity: 0.7,
-        marginBottom: "1.5rem"
-      }}>
-        Endpoints currently reporting telemetry
-      </p>
-
-      <div style={{
-        marginBottom: "1.5rem",
-        color: "#ff007a",
-        fontWeight: "600"
-      }}>
-        Someone’s system is always screaming.
+    <div className="relative min-h-screen w-full bg-[#020104] font-sans text-white overflow-hidden">
+      
+      {/* 1. The Animated Physics Pixel Grid */}
+      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+        <PixelCanvas 
+          colors={["#3E065F", "#8E05C2", "#C084FC", "#ffffff"]} 
+          gap={8} 
+          speed={25} 
+        />
+        {/* Vignette to ensure text readability */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#020104_100%)]" />
       </div>
 
-      {loading ? (
-        <p>Scanning network...</p>
-      ) : agents.length === 0 ? (
-        <p>No active endpoints detected</p>
-      ) : (
-        agents.map((agent, index) => (
-          <div
-            key={agent.agent_id}
-            onClick={() => handleSelect(agent)}
-            style={{
-              padding: "1.2rem",
-              marginBottom: "1rem",
-              border: "1px solid rgba(255,0,122,0.3)",
-              borderRadius: "14px",
-              cursor: "pointer",
-              background: "rgba(20,0,30,0.6)",
-              transition: "0.2s",
-              display: "flex",
-              alignItems: "center",
-              gap: "15px"
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.boxShadow = "0 0 20px rgba(255,0,122,0.5)";
-              e.currentTarget.style.borderColor = "#ff007a";
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.boxShadow = "none";
-              e.currentTarget.style.borderColor = "rgba(255,0,122,0.3)";
-            }}
-          >
+      <main className="relative z-10 mx-auto flex max-w-5xl flex-col items-center px-6 pt-32 pb-24 text-center">
+        
+        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-medium uppercase tracking-widest text-purple-300 shadow-[0_0_20px_rgba(142,5,194,0.2)]">
+          <Terminal size={14} /> System Initialized
+        </div>
+        
+        <h1 className="text-6xl font-black tracking-tighter sm:text-8xl mb-6 drop-shadow-2xl">
+          Silent <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Precision.</span>
+        </h1>
+        
+        <p className="max-w-2xl text-lg text-white/60 mb-16 leading-relaxed">
+          Interfaces with refined motion. Every calculated detail delivers an elevated digital experience. Select an active endpoint to initialize telemetry monitoring.
+        </p>
 
-            {/* Agent ID circle */}
-            <div style={{
-              width: "45px",
-              height: "45px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg,#ff007a,#7a00ff)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontWeight: "700"
-            }}>
-              {String(index + 1).padStart(3, "0")}
+        {/* 2. The Agent Grid with Avatars & Status Dots */}
+        <div className="w-full text-left">
+          {loading ? (
+            <div className="flex h-32 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md">
+              <p className="animate-pulse text-white/50 tracking-widest uppercase text-sm">Scanning network vectors...</p>
             </div>
-
-            {/* Info */}
-            <div>
-              <div style={{ fontWeight: "600" }}>
-                {agent.name || "Unknown User"}
-              </div>
-
-              <div style={{
-                fontSize: "0.75rem",
-                opacity: 0.6
-              }}>
-                {agent.agent_id}
-              </div>
-
-              <div style={{
-                fontSize: "0.75rem",
-                color: "#00f0ff",
-                marginTop: "4px"
-              }}>
-                View Dashboard →
-              </div>
+          ) : agents.length === 0 ? (
+            <div className="flex h-32 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-md">
+              <p className="text-white/50">No active endpoints detected.</p>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {agents.map((agent) => {
+                // Check if the agent has checked in within the last 10 minutes (600 seconds)
+                const isActive = agent.last_seen && (Date.now() / 1000 - agent.last_seen) < 600;
 
-          </div>
-        ))
-      )}
+                return (
+                  <button
+                    key={agent.agent_id}
+                    onClick={() => handleSelect(agent)}
+                    className="group relative flex w-full items-center justify-between overflow-hidden rounded-2xl border border-white/10 bg-[#0a0514]/60 px-5 py-5 text-left backdrop-blur-xl transition-all duration-300 hover:border-purple-500/50 hover:bg-[#150a29]/80 hover:shadow-[0_8px_30px_rgba(142,5,194,0.15)]"
+                  >
+                    <div className="flex items-center gap-4 z-10">
+                      
+                      {/* Animated Avatar + Status Dot */}
+                      <div className="relative">
+                        <FallbackAvatar 
+                          name={agent.name || agent.agent_id} 
+                          size={46} 
+                          className="rounded-full shadow-inner border border-white/5 group-hover:scale-105 transition-transform duration-300" 
+                        />
+                        {/* Status Indicator */}
+                        <div 
+                          className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-[#0a0514] transition-colors duration-300 group-hover:border-[#150a29] ${
+                            isActive ? "bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.6)]" : "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
+                          }`} 
+                        />
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg text-white group-hover:text-purple-100 transition-colors">
+                          {agent.name || "Unknown Operative"}
+                        </h3>
+                        <p className="text-xs text-white/40 font-mono mt-0.5 tracking-wider">
+                          {agent.agent_id}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-all group-hover:border-purple-500/40 group-hover:bg-purple-500/20 group-hover:text-purple-300">
+                      <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )} 
+        </div>
+      </main>
     </div>
-  </div>
-);
+  );
 }

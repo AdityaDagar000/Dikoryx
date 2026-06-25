@@ -127,6 +127,35 @@ export function ScrollReelTestimonials({ testimonials, charStaggerMs = 6, classN
     },
     [index, count]
   );
+  React.useEffect(() => {
+  const interval = setInterval(() => {
+    if (animating.current) return;
+
+    if (index < count - 1) {
+      paginate(1);
+    } else {
+      animating.current = true;
+
+      setExiting(true);
+
+      timeouts.current.push(
+        setTimeout(() => {
+          setIndex(0);
+          setDisplayIndex(0);
+          setExiting(false);
+        }, EXIT_MS)
+      );
+
+      timeouts.current.push(
+        setTimeout(() => {
+          animating.current = false;
+        }, SLIDE_MS)
+      );
+    }
+  }, 5000);
+
+  return () => clearInterval(interval);
+}, [index, count, paginate]);
 
   const onKeyDown = (e) => {
     if (e.key === "ArrowRight") {
