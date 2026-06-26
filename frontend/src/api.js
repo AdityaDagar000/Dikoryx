@@ -6,33 +6,140 @@ const BACKEND =
 
 const NO_CACHE = { cache: "no-store", headers: { "Cache-Control": "no-cache", Pragma: "no-cache" } };
 
+class ApiError extends Error {
+  constructor(message, { status, path } = {}) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.path = path;
+  }
+}
+
 function urlWithStamp(path) {
   return `${BACKEND}${path}${path.includes("?") ? "&" : "?"}_=${Date.now()}`;
 }
 
+async function postJson(path, payload) {
+  // In development, prefer Vite's /api proxy so localhost talks to the
+  // backend you are actively running instead of a stale Render deployment.
+  const bases = import.meta.env.DEV && BACKEND ? ["", BACKEND] : [BACKEND];
+
+  for (let index = 0; index < bases.length; index += 1) {
+    let r;
+
+    try {
+      r = await fetch(`${bases[index]}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+    } catch (error) {
+      if (index < bases.length - 1) {
+        continue;
+      }
+      throw error;
+    }
+
+    const data = await r.json().catch(() => ({}));
+    const canRetryNextBackend = r.status === 404 && index < bases.length - 1;
+
+    if (canRetryNextBackend) {
+      continue;
+    }
+
+    if (r.status === 404) {
+      throw new ApiError(`Backend endpoint unavailable: ${path}`, {
+        status: r.status,
+        path,
+      });
+    }
+
+    if (!r.ok || data?.error) {
+      throw new ApiError(data?.detail || data?.error || data?.message || "Request failed", {
+        status: r.status,
+        path,
+      });
+    }
+
+    return data;
+  }
+
+  throw new ApiError(`Backend endpoint unavailable: ${path}`, { path });
+}
+
+async function getJson(path) {
+  const r = await fetch(urlWithStamp(path), NO_CACHE);
+  const data = await r.json().catch(() => ({}));
+
+  if (r.status === 404) {
+    throw new Error(`Backend endpoint unavailable: ${path}`);
+  }
+
+  if (!r.ok || data?.error) {
+    throw new Error(data?.detail || data?.error || data?.message || "Request failed");
+  }
+
+  return data;
+}
+
 export const API = {
+  backendUrl: BACKEND,
+
+  login: async (credentials) =>
+    postJson("/api/v1/login", credentials),
+
+  signup: async (payload) =>
+    postJson("/api/v1/signup", payload),
+
+  verifyOtp: async (payload) =>
+    postJson("/api/v1/verify-otp", payload),
+
+  createOrganization: async (payload) =>
+    postJson("/api/v1/organizations", payload),
+
+  listOrganizations: async () =>
+    getJson("/api/v1/organizations"),
+
+  getOrganization: async (id) =>
+    getJson(`/api/v1/organizations/${encodeURIComponent(id)}`),
+
   listSystems: async () => {
     const r = await fetch(urlWithStamp("/api/v1/systems"), NO_CACHE);
     if (!r.ok) throw new Error("listSystems failed");
     return await r.json();
   },
+
   getSystem: async (id) => {
-    const r = await fetch(urlWithStamp(`/api/v1/system/${encodeURIComponent(id)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/system/${encodeURIComponent(id)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getSystem failed");
     return await r.json();
   },
+
   getAllRisk: async () => {
     const r = await fetch(urlWithStamp("/api/v1/risk"), NO_CACHE);
     if (!r.ok) throw new Error("getAllRisk failed");
     return await r.json();
   },
+
   getRisk: async (agentId) => {
-    const r = await fetch(urlWithStamp(`/api/v1/risk/${encodeURIComponent(agentId)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/risk/${encodeURIComponent(agentId)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getRisk failed");
     return await r.json();
   },
+
   getDlpAlerts: async (agentId) => {
-    const r = await fetch(urlWithStamp(`/api/v1/dlp/${encodeURIComponent(agentId)}`), NO_CACHE);
+    const r = await fetch(
+      urlWithStamp(`/api/v1/dlp/${encodeURIComponent(agentId)}`),
+      NO_CACHE
+    );
     if (!r.ok) throw new Error("getDlpAlerts failed");
     return await r.json();
   },

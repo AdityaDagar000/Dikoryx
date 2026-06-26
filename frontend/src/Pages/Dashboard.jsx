@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import SystemList from "../components/SystemList";
 import SystemDetails from "../components/SystemDetails";
 import { API } from "../api";
-import { Menu } from "lucide-react";
+import { LogOut, Menu, RadioTower, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ShaderBackground from "../components/ShaderBackground";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -14,6 +16,24 @@ export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const navigate = useNavigate();
+
+  const dashboardStats = useMemo(() => {
+    const now = Date.now() / 1000;
+    const active = systems.filter((system) => system.last_seen && now - system.last_seen < 600).length;
+    const risks = Object.values(riskMap);
+    const high = risks.filter((risk) => ["HIGH", "CRITICAL"].includes((risk?.risk_level || "").toUpperCase())).length;
+    const averageRisk = risks.length
+      ? Math.round(risks.reduce((sum, risk) => sum + Number(risk?.risk_score || 0), 0) / risks.length)
+      : 0;
+
+    return {
+      total: systems.length,
+      active,
+      high,
+      averageRisk,
+      inactive: Math.max(0, systems.length - active),
+    };
+  }, [systems, riskMap]);
 
   // ✅ Load user + selected agent ONCE
   useEffect(() => {
@@ -84,50 +104,30 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh",
-        width: "100vw",
-        backgroundColor: "#050a14",
-        color: "#fff",
-        fontFamily: "'Rajdhani', sans-serif",
-        overflow: "hidden",
-      }}
-    >
-      {/* HEADER */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "1rem 2rem",
-          borderBottom: "1px solid rgba(0, 240, 255, 0.2)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+    <div className="soc-dashboard-shell">
+      <ShaderBackground className="soc-dashboard-shader" />
+      <div className="soc-dashboard-overlay" />
+
+      <div className="soc-dashboard-header">
+        <div className="soc-header-left">
           <button
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            style={{
-              border: "1px solid #00f0ff",
-              color: "#00f0ff",
-              padding: "0.5rem",
-              background: "transparent",
-              cursor: "pointer",
-            }}
+            className="soc-icon-button"
+            aria-label="Toggle endpoint sidebar"
           >
             <Menu size={20} />
           </button>
 
-          <div>
-            <div style={{ color: "#00f0ff", fontWeight: "bold" }}>
-              INSIDER THREAT DETECTION
+          <div className="soc-title-block">
+            <div className="soc-title-row">
+              <ShieldCheck size={20} />
+              <span>DIKORYX SOC COMMAND</span>
             </div>
-            <div style={{ fontSize: "0.8rem", opacity: 0.7 }}>
+            <div className="soc-subtitle">
+              <RadioTower size={14} />
               Active Endpoints: {systems.length}
               {lastSyncedAt && (
-                <> // {new Date(lastSyncedAt).toLocaleTimeString()}</>
+                <> // Synced {new Date(lastSyncedAt).toLocaleTimeString()}</>
               )}
             </div>
           </div>
@@ -138,50 +138,33 @@ export default function Dashboard() {
             localStorage.clear();
             navigate("/login");
           }}
-          style={{
-            border: "1px solid red",
-            color: "red",
-            padding: "0.4rem 1rem",
-            background: "transparent",
-            cursor: "pointer",
-          }}
+          className="soc-logout-button"
         >
-          LOGOUT
+          <LogOut size={16} />
+          Logout
         </button>
       </div>
 
-      {/* MAIN */}
-      <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* SIDEBAR */}
+      <div className="soc-overview-strip">
+        <SocMetricCard label="Total Endpoints" value={dashboardStats.total} trend="Fleet inventory" />
+        <SocMetricCard label="Active Signals" value={dashboardStats.active} trend={`${dashboardStats.inactive} inactive`} accent="green" />
+        <SocMetricCard label="High Risk Nodes" value={dashboardStats.high} trend="High + critical" accent="red" />
+        <SocMetricCard label="Avg Risk Score" value={dashboardStats.averageRisk} trend="Across loaded agents" accent="purple" />
+      </div>
+
+      <div className="soc-dashboard-main">
         {isSidebarOpen && (
-          <div
-            style={{
-              width: "300px",
-              background: "rgba(0,0,0,0.5)",
-              overflowY: "auto",
-            }}
-          >
-            <div style={{ padding: "1rem" }}>
-              {/* USER CARD */}
+          <aside className="soc-sidebar-panel">
+            <div className="soc-sidebar-inner">
               {user && (
-                <div
-                  style={{
-                    marginBottom: "1rem",
-                    padding: "1rem",
-                    border: "1px solid #00f0ff",
-                  }}
-                >
-                  <div>{user.name || user.username}</div>
-                  <div style={{ fontSize: "0.8rem" }}>
-                    {user.department}
-                  </div>
-                  <div style={{ fontSize: "0.7rem" }}>
-                    {user.agent_id}
-                  </div>
+                <div className="soc-user-card">
+                  <div className="soc-user-label">Signed-in analyst</div>
+                  <div className="soc-user-name">{user.name || user.username}</div>
+                  <div className="soc-user-meta">{user.department}</div>
+                  <div className="soc-user-agent">{user.agent_id}</div>
                 </div>
               )}
 
-              {/* SYSTEM LIST */}
               <SystemList
                 systems={systems}
                 riskMap={riskMap}
@@ -192,19 +175,38 @@ export default function Dashboard() {
                 }}
               />
             </div>
-          </div>
+          </aside>
         )}
 
-        {/* DETAILS */}
-        <div style={{ flex: 1, overflowY: "auto" }}>
+        <section className="soc-details-panel">
           {selected ? (
             <SystemDetails agentId={selected} />
           ) : (
-            <div style={{ padding: "2rem", opacity: 0.6 }}>
-              Select an agent to view details
+            <div className="soc-empty-state">
+              <div className="soc-empty-kicker">No endpoint selected</div>
+              <h2>Select an agent to view details</h2>
+              <p>Open the endpoint drawer and choose an active system to inspect risk, DLP, compliance, and telemetry.</p>
             </div>
           )}
-        </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function SocMetricCard({ label, value, trend, accent = "blue" }) {
+  const width = Math.min(100, Math.max(8, Number(value) || 0));
+
+  return (
+    <div className={`soc-metric-card soc-metric-${accent}`}>
+      <div className="soc-metric-top">
+        <span>{label}</span>
+        <span className="soc-metric-dot" />
+      </div>
+      <div className="soc-metric-value">{value}</div>
+      <div className="soc-metric-trend">{trend}</div>
+      <div className="soc-metric-bar">
+        <span style={{ width: `${width}%` }} />
       </div>
     </div>
   );

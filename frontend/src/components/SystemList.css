@@ -13,7 +13,7 @@
   font-family: 'Share Tech Mono', monospace;
   letter-spacing: 2px;
   font-size: 0.9rem;
-  border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+  border-bottom: 1px solid rgba(192, 132, 252, 0.2);
   padding-bottom: 0.75rem;
   margin-bottom: 1rem;
 }
@@ -35,25 +35,26 @@
 
 /* ================= ENDPOINT CARD ================= */
 .endpoint-card {
-  background: rgba(5, 10, 20, 0.6);
-  border: 1px solid rgba(0, 240, 255, 0.1);
+  background: rgba(15, 23, 42, 0.52);
+  border: 1px solid rgba(192, 132, 252, 0.12);
   padding: 1rem;
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
-  clip-path: polygon(0 10px, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
+  border-radius: 1.1rem;
+  overflow: hidden;
 }
 
 .endpoint-card:hover {
-  background: rgba(0, 240, 255, 0.05);
-  border-color: rgba(0, 240, 255, 0.4);
+  background: rgba(142, 5, 194, 0.08);
+  border-color: rgba(192, 132, 252, 0.38);
   transform: translateX(5px);
 }
 
 .endpoint-card.selected {
-  background: rgba(0, 240, 255, 0.1);
+  background: rgba(142, 5, 194, 0.12);
   border-color: var(--neon-cyan);
-  box-shadow: inset 4px 0 0 var(--neon-cyan), 0 0 15px rgba(0, 240, 255, 0.1);
+  box-shadow: inset 4px 0 0 var(--neon-cyan), 0 0 24px rgba(142, 5, 194, 0.16);
 }
 
 /* ================= CARD TOP (AVATAR & INFO) ================= */
@@ -75,8 +76,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%); /* Hexagon shape */
-  filter: grayscale(80%) contrast(120%) sepia(30%) hue-rotate(150deg);
+  border-radius: 1rem;
+  filter: grayscale(30%) contrast(110%);
   border: 1px solid var(--neon-cyan);
 }
 
@@ -146,7 +147,7 @@
   font-weight: bold;
 }
 
-.risk-badge.low { color: var(--neon-cyan); background: rgba(0, 240, 255, 0.1); }
+.risk-badge.low { color: var(--neon-cyan); background: rgba(142, 5, 194, 0.12); }
 .risk-badge.medium { color: var(--neon-yellow); background: rgba(250, 204, 21, 0.1); }
 .risk-badge.high { color: var(--neon-pink); background: rgba(255, 0, 60, 0.1); }
 .risk-badge.critical { color: var(--neon-red); background: rgba(255, 0, 0, 0.2); animation: pulse 1.5s infinite; }

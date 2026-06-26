@@ -15,7 +15,9 @@ from backend.database import (
 from backend.dlp_engine import evaluate_dlp
 from backend.risk_engine import compute_risk
 from backend.state import events, systems
+from dotenv import load_dotenv
 
+load_dotenv()
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 

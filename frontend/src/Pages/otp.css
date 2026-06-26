@@ -1,0 +1,216 @@
+.otp-page {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(142, 5, 194, 0.34), transparent 38%),
+    linear-gradient(135deg, #050816 0%, #080b1a 45%, #000 100%);
+  padding: 7rem 1.5rem 3rem;
+  color: #fff;
+}
+
+.otp-line-field {
+  position: absolute;
+  inset: -20%;
+  opacity: 0.62;
+  background:
+    repeating-radial-gradient(circle at 50% 48%, transparent 0 18px, rgba(147, 197, 253, 0.12) 19px 21px),
+    conic-gradient(from 160deg at 50% 48%, transparent, rgba(59, 130, 246, 0.18), rgba(142, 5, 194, 0.32), transparent);
+  animation: otp-lines-drift 9s linear infinite;
+}
+
+.otp-page::before,
+.otp-page::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(80px);
+}
+
+.otp-page::before {
+  width: 420px;
+  height: 420px;
+  background: rgba(37, 99, 235, 0.34);
+  top: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.otp-page::after {
+  width: 360px;
+  height: 360px;
+  background: rgba(142, 5, 194, 0.3);
+  right: 10%;
+  bottom: 12%;
+}
+
+.otp-card {
+  position: relative;
+  z-index: 1;
+  width: min(575px, 100%);
+  min-height: 690px;
+  overflow: hidden;
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.95), rgba(15, 38, 148, 0.82) 40%, rgba(0, 0, 0, 0.96) 88%),
+    #050816;
+  padding: 5rem 3rem 3rem;
+  text-align: center;
+  box-shadow: 0 35px 100px rgba(0, 0, 0, 0.55), 0 0 80px rgba(59, 130, 246, 0.24);
+}
+
+.otp-card::before {
+  content: "";
+  position: absolute;
+  inset: 6rem -9rem auto;
+  height: 430px;
+  border-radius: 999px;
+  background: repeating-radial-gradient(circle, transparent 0 13px, rgba(255, 255, 255, 0.055) 14px 16px);
+  opacity: 0.7;
+}
+
+.otp-lightning {
+  position: relative;
+  z-index: 1;
+  font-size: 2.5rem;
+  text-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+}
+
+.otp-card h1,
+.otp-card p,
+.otp-card form,
+.otp-resend,
+.otp-legal {
+  position: relative;
+  z-index: 1;
+}
+
+.otp-card h1 {
+  margin: 2rem 0 1rem;
+  font-size: clamp(2rem, 4vw, 2.35rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.otp-card p {
+  margin: 0 auto;
+  max-width: 380px;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.otp-card strong {
+  display: block;
+  color: #fff;
+  font-weight: 600;
+}
+
+.otp-input-row {
+  display: flex;
+  justify-content: center;
+  gap: 1.4rem;
+  margin-top: 3.2rem;
+}
+
+.otp-digit {
+  width: 5.25rem;
+  height: 5.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 1.3rem;
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.otp-digit:focus {
+  border-color: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 28px rgba(147, 197, 253, 0.35);
+  transform: translateY(-2px);
+}
+
+.otp-submit {
+  margin-top: 2rem;
+  width: min(320px, 100%);
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3e065f, #700b97, #8e05c2);
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  padding: 1rem 1.5rem;
+  text-transform: uppercase;
+  box-shadow: 0 0 34px rgba(142, 5, 194, 0.38);
+}
+
+.otp-error {
+  margin: 1.4rem auto 0;
+  width: fit-content;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  border-radius: 999px;
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+  padding: 0.55rem 1rem;
+}
+
+.otp-resend {
+  margin-top: 2rem;
+  color: rgba(226, 232, 240, 0.72);
+}
+
+.otp-resend button,
+.otp-legal a {
+  border: 0;
+  background: transparent;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.otp-legal {
+  margin: 3.5rem auto 0;
+  max-width: 410px;
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.otp-legal a {
+  text-decoration: underline;
+}
+
+@keyframes otp-lines-drift {
+  from {
+    transform: rotate(0deg) scale(1);
+  }
+  to {
+    transform: rotate(360deg) scale(1.05);
+  }
+}
+
+@media (max-width: 620px) {
+  .otp-card {
+    min-height: 620px;
+    padding: 4rem 1.2rem 2.5rem;
+  }
+
+  .otp-input-row {
+    gap: 0.7rem;
+  }
+
+  .otp-digit {
+    width: 4rem;
+    height: 4rem;
+  }
+}

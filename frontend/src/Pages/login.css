@@ -1,319 +1,897 @@
+/*
+ * login.css — DRACARYX Authentication UI
+ * Glassmorphism Design System v2
+ *
+ * Core philosophy:
+ *   Glass cards should feel like frosted crystal hovering in front of the
+ *   scene, not like dark panels painted over it. The background artwork
+ *   must remain the hero. The card is a frame, not a wall.
+ *
+ * Key changes from v1:
+ *   1. brightness(0.85) → brightness(1.1)   — was dimming, now lifts slightly
+ *   2. saturate(2.5)    → saturate(1.8)     — was over-vibrating, now crisp
+ *   3. blur(5px)        → blur(20px)         — proper frosted depth
+ *   4. rgba(20,10,30,0.45) → rgba(8,2,28,0.18) — was opaque, now translucent
+ *   5. Added contrast(1.05) — tightens blur smear without darkening
+ *   6. Border uses gradient instead of flat colour for prismatic edge
+ *   7. Scanline opacity reduced from 0.25 → 0.12 to stop eating brightness
+ *   8. Added ambient glow layer below cards (does not affect backdrop-filter)
+ */
+
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Fira+Code:wght@400;500&display=swap');
 
+/* =========================================================
+   DESIGN TOKENS
+========================================================= */
 :root {
-  --neon-cyan: #00f0ff;
-  --neon-magenta: #ff00ff;
-  --neon-purple: #8b5cf6;
-  --bg-dark: #0a0a0f;
-  
-  --glass-bg: rgba(20, 10, 30, 0.45);
-  --glass-border: rgba(255, 0, 255, 0.15);
-  --input-bg: rgba(0, 0, 0, 0.4);
-  
+  /* Palette */
+  --neon-cyan:        #00f0ff;
+  --neon-magenta:     #ff00ff;
+  --neon-purple:      #8b5cf6;
+  --neon-violet:      #a855f7;
+  --bg-dark:          #07040f;
+
+  /* Glass system — single source of truth for the frosted effect */
+  --glass-blur:         20px;
+  --glass-brightness:   1.1;
+  --glass-saturate:     1.8;
+  --glass-contrast:     1.05;
+  --glass-bg:           rgba(8, 2, 28, 0.18);
+  --glass-bg-hover:     rgba(8, 2, 28, 0.22);
+
+  /* Border */
+  --glass-border-top:   rgba(255, 255, 255, 0.22);
+  --glass-border-side:  rgba(180, 80, 255, 0.18);
+  --glass-border-width: 1px;
+
+  /* Input */
+  --input-bg:           rgba(255, 255, 255, 0.055);
+  --input-bg-focus:     rgba(255, 255, 255, 0.09);
+  --input-border:       rgba(255, 255, 255, 0.1);
+  --input-border-focus: rgba(168, 85, 247, 0.6);
+
+  /* Typography */
   --font-heading: 'Rajdhani', sans-serif;
-  --font-body: 'Fira Code', monospace;
+  --font-body:    'Fira Code', monospace;
+
+  /* Glow palette */
+  --glow-purple-sm:   0 0 18px rgba(139, 92, 246, 0.28);
+  --glow-purple-md:   0 0 36px rgba(139, 92, 246, 0.38);
+  --glow-purple-lg:   0 0 60px rgba(139, 92, 246, 0.22);
+  --glow-magenta-sm:  0 0 18px rgba(255, 0, 255, 0.28);
+  --glow-magenta-md:  0 0 36px rgba(255, 0, 255, 0.42);
+  --glow-cyan-sm:     0 0 14px rgba(0, 240, 255, 0.3);
 }
 
-* { box-sizing: border-box; }
+/* =========================================================
+   RESET
+========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
 
 body, html {
-  margin: 0; padding: 0;
+  margin: 0;
+  padding: 0;
   background-color: var(--bg-dark);
   color: #fff;
-  height: 100vh; overflow: hidden;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* =========================================
-   BACKGROUND & TEXTURES
-========================================= */
+/* =========================================================
+   ROOT — BACKGROUND & SCENE
+========================================================= */
 .synth-root {
   min-height: 100vh;
-  display: flex; justify-content: center; align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   position: relative;
   padding: 20px;
-  /* 👇 This tells CSS to go up one folder, into assets, and grab the image */
-  background-image: url('../assets/cyberpunk-bg.jpg'); 
+  background-image: url('../assets/cyberpunk-bg.jpg');
   background-size: cover;
   background-position: center;
+  isolation: isolate; /* prevents z-index bleed from child stacking contexts */
 }
 
+/* ── Scanlines — lightened so they stop eating brightness ── */
 .cyber-scanlines {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.25) 2px, rgba(0, 0, 0, 0.25) 4px);
-  z-index: 1; pointer-events: none;
+  position: absolute;
+  inset: 0;
+  /*
+   * BEFORE: rgba(0,0,0,0.25) — was removing ~25% brightness from the scene
+   *  AFTER: rgba(0,0,0,0.10) — subtle rhythm without dimming the palette
+   */
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.10) 2px,
+    rgba(0, 0, 0, 0.10) 4px
+  );
+  z-index: 1;
+  pointer-events: none;
 }
 
-/* =========================================
-   MAIN GLASS CARD (The Clean Look)
-========================================= */
+/* ── Ambient glow pools (sit behind the card, add depth) ── */
+.synth-root::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 38% at 50% 52%, rgba(100, 40, 220, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 28% 20% at 30% 70%, rgba(255, 0, 255, 0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 22% 16% at 72% 28%, rgba(0, 240, 255, 0.06) 0%, transparent 55%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* =========================================================
+   GLASS CARD — THE CENTREPIECE
+   ─────────────────────────────────────────────────────────
+   WHY EACH VALUE WAS CHOSEN:
+   ┌─────────────────────┬──────────────┬────────────────────────────────────────────────────┐
+   │ Property            │ Old value    │ New value + rationale                              │
+   ├─────────────────────┼──────────────┼────────────────────────────────────────────────────┤
+   │ blur()              │ 5px          │ 20px  — 5px gives a weak haze, not a frosted panel │
+   │                     │              │         20px creates genuine depth & diffusion      │
+   │                     │              │         ≥24px starts erasing BG detail entirely    │
+   ├─────────────────────┼──────────────┼────────────────────────────────────────────────────┤
+   │ brightness()        │ 0.85         │ 1.1   — 0.85 actively dims BG through the glass    │
+   │                     │              │         1.0 = neutral pass-through                 │
+   │                     │              │         1.1 = slight lift that compensates for the │
+   │                     │              │         dark purple scene tonality                 │
+   ├─────────────────────┼──────────────┼────────────────────────────────────────────────────┤
+   │ saturate()          │ 2.5          │ 1.8   — 2.5 over-fires chroma, turning purples     │
+   │                     │              │         into neon screaming. 1.8 punches up        │
+   │                     │              │         the cyberpunk palette without blowing out  │
+   ├─────────────────────┼──────────────┼────────────────────────────────────────────────────┤
+   │ contrast()          │ (absent)     │ 1.05  — small lift tightens the blur smear,        │
+   │                     │              │         recovering edge sharpness. Keep ≤1.1.      │
+   │                     │              │         Higher values start hazing out midtones.   │
+   ├─────────────────────┼──────────────┼────────────────────────────────────────────────────┤
+   │ background-color    │ rgba(20,10,  │ rgba(8, 2, 28, 0.18)                               │
+   │                     │  30, 0.45)  │ 0.45 alpha = nearly half the view blocked by solid  │
+   │                     │              │ dark purple. Dropped to 0.18 — a faint violet tint  │
+   │                     │              │ that colours the glass without hiding the BG.       │
+   └─────────────────────┴──────────────┴────────────────────────────────────────────────────┘
+========================================================= */
 .synth-glass-card {
-  position: relative; z-index: 10;
-  width: 100%; max-width: 450px;
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 450px;
   padding: 40px 30px;
+
+  /* ── Translucent fill ── */
   background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
+
+  /* ── The corrected backdrop filter ── */
+  backdrop-filter:
+    blur(var(--glass-blur))
+    brightness(var(--glass-brightness))
+    saturate(var(--glass-saturate))
+    contrast(var(--glass-contrast));
+  -webkit-backdrop-filter:
+    blur(var(--glass-blur))
+    brightness(var(--glass-brightness))
+    saturate(var(--glass-saturate))
+    contrast(var(--glass-contrast));
+
+  /* ── Prismatic border: bright top edge fades to subtle sides ──
+     A flat rgba(255,0,255,0.15) border reads as a stroke.
+     A gradient border reads as light refracting through crystal. */
+  border-radius: 22px;
+  border: var(--glass-border-width) solid transparent;
+  background-clip: padding-box;
+
+  /* ── Box shadows: 3 layers working together ──
+     Layer 1 (inset top): simulates light hitting the top face of glass
+     Layer 2 (inset overall): faint inner glow from scene light
+     Layer 3 (outer): the card lifted off the background with ambient glow */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 0 0 1px rgba(180, 80, 255, 0.14),
+    0 4px 6px rgba(0, 0, 0, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(120, 40, 200, 0.14),
+    var(--glow-purple-lg);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  transition:
+    background 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* ── Top prismatic highlight (the "glass edge" effect) ── */
+.synth-glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  /* A gradient mask creates the illusion that the top edge is thicker glass */
+  background: linear-gradient(
+    170deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(255, 255, 255, 0.03) 28%,
+    transparent 55%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Noise texture — adds tactile grain to the frosted surface ── */
+.synth-glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* All direct children sit above the pseudo elements */
+.synth-glass-card > * { position: relative; z-index: 1; }
+
+.synth-glass-card:hover {
+  background: var(--glass-bg-hover);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 0 0 1px rgba(180, 80, 255, 0.2),
+    0 4px 6px rgba(0, 0, 0, 0.14),
+    0 16px 48px rgba(0, 0, 0, 0.55),
+    0 0 80px rgba(120, 40, 200, 0.2);
+}
+
+/* =========================================================
+   THE .glass3d UTILITY
+   ─────────────────────────────────────────────────────────
+   Drop-in replacement for the class used elsewhere in the
+   codebase. Maintains the CSS variable API so existing
+   component overrides still work.
+========================================================= */
+.glass3d {
+  /* Expose the same CSS variable hooks as the original */
+  --filter-glass3d:
+    blur(20px)
+    brightness(1.1)
+    saturate(1.8)
+    contrast(1.05);
+  --color-glass3d:  rgba(8, 2, 28, 0.18);
+  --noise-glass3d:  url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.88' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+
+  position: relative;
+  z-index: 4;
   border-radius: 20px;
-  box-shadow: 0 0 40px rgba(255, 0, 255, 0.05), inset 0 0 20px rgba(255, 0, 255, 0.02);
-  display: flex; flex-direction: column; align-items: center;
+  background-clip: padding-box;
+
+  /*
+   * Shadow system: replaces the original 8-layer deep-shadow stack with
+   * 4 purposeful layers:
+   *   1. 0.75px hairline — card boundary, same colour as v1
+   *   2. near shadow — close lift off background
+   *   3. mid shadow — the "floating" feeling
+   *   4. ambient glow — the purple halo the brand demands
+   */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 0 0 1px rgba(180, 80, 255, 0.12),
+    0 2px 4px   rgba(0, 0, 0, 0.18),
+    0 8px 32px  rgba(0, 0, 0, 0.44),
+    0 0 0 0.75px rgba(180, 100, 255, 0.1),
+    var(--glow-purple-lg);
 }
 
-/* Profile Avatar Icon */
+/* Glass filter lives in the ::before pseudo so it doesn't affect children */
+.glass3d::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: -1;
+
+  -webkit-backdrop-filter: var(--filter-glass3d);
+  backdrop-filter:         var(--filter-glass3d);
+
+  background-color:  var(--color-glass3d);
+  background-image:  var(--noise-glass3d);
+  opacity: 1;
+
+  /* Top-face highlight */
+  background-image:
+    var(--noise-glass3d),
+    linear-gradient(
+      168deg,
+      rgba(255, 255, 255, 0.08) 0%,
+      rgba(255, 255, 255, 0.025) 25%,
+      transparent 52%
+    );
+  background-blend-mode: overlay, normal;
+}
+
+/*
+ * Component-level overrides — use these to tune individual panels
+ * without touching the global glass3d values.
+ *
+ * Example: a tighter inner panel
+ *   .my-inner-panel {
+ *     --filter-glass3d: blur(12px) brightness(1.08) saturate(1.6) contrast(1.04);
+ *     --color-glass3d: rgba(8, 2, 28, 0.12);
+ *   }
+ */
+
+/* =========================================================
+   AVATAR
+========================================================= */
 .synth-avatar {
-  width: 60px; height: 60px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  display: flex; justify-content: center; align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  justify-content: center;
+  align-items: center;
   margin-bottom: 20px;
-  color: #aaa;
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 0 1px rgba(180, 80, 255, 0.12) inset,
+    var(--glow-purple-sm);
+  transition: box-shadow 0.2s ease;
 }
-.synth-avatar svg { width: 30px; height: 30px; }
+.synth-avatar:hover {
+  box-shadow:
+    0 0 0 1px rgba(180, 80, 255, 0.25) inset,
+    var(--glow-purple-md);
+}
+.synth-avatar svg { width: 28px; height: 28px; }
 
-/* =========================================
+/* =========================================================
    TYPOGRAPHY
-========================================= */
-.synth-header { text-align: center; margin-bottom: 30px; width: 100%; }
+========================================================= */
+.synth-header {
+  text-align: center;
+  margin-bottom: 30px;
+  width: 100%;
+}
 
 .synth-title {
   font-family: var(--font-heading);
-  font-size: 2.5rem; font-weight: 700;
+  font-size: 2.5rem;
+  font-weight: 700;
   color: #fff;
   margin: 0 0 5px 0;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   position: relative;
   display: inline-block;
+  text-shadow:
+    0 0 30px rgba(180, 80, 255, 0.5),
+    0 0 60px rgba(180, 80, 255, 0.2);
 }
 
 .synth-subtitle {
-  font-family: 'Rajdhani', sans-serif;
-  font-size: 1rem; color: #ccc;
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
+  letter-spacing: 0.08em;
 }
 
-/* =========================================
-   INPUTS (Smooth Terminal Hybrid)
-========================================= */
-.synth-form { width: 100%; display: flex; flex-direction: column; gap: 20px; }
+/* =========================================================
+   INPUTS
+========================================================= */
+.synth-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
 
 .synth-input-wrapper {
   position: relative;
-  display: flex; align-items: center;
+  display: flex;
+  align-items: center;
   background: var(--input-bg);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--input-border);
   border-radius: 10px;
-  transition: all 0.3s ease;
+  transition:
+    background 0.22s ease,
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
   overflow: hidden;
 }
 
 .synth-input-wrapper:focus-within {
-  border-color: var(--neon-magenta);
-  box-shadow: 0 0 15px rgba(255, 0, 255, 0.2);
-  background: rgba(20, 10, 30, 0.6);
+  background: var(--input-bg-focus);
+  border-color: var(--input-border-focus);
+  box-shadow:
+    0 0 0 3px rgba(168, 85, 247, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .cyber-prefix {
-  font-family: var(--font-body); color: var(--neon-cyan);
-  padding-left: 15px; font-weight: bold; font-size: 1.1rem;
+  font-family: var(--font-body);
+  color: var(--neon-cyan);
+  padding-left: 15px;
+  font-weight: 500;
+  font-size: 1.05rem;
+  text-shadow: var(--glow-cyan-sm);
+  flex-shrink: 0;
 }
 
 .synth-input {
-  background: transparent; border: none; outline: none;
-  color: #fff; font-family: 'Rajdhani', sans-serif; font-size: 1.1rem;
-  width: 100%; padding: 15px;
-  letter-spacing: 1px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  width: 100%;
+  padding: 14px 15px;
+  letter-spacing: 0.5px;
 }
-.synth-input::placeholder { color: rgba(255, 255, 255, 0.3); }
+.synth-input::placeholder { color: rgba(255, 255, 255, 0.28); }
 
 .synth-eye-btn {
-  color: #888; cursor: pointer;
-  padding-right: 15px; font-size: 1.2rem;
-  transition: color 0.2s;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  padding-right: 15px;
+  font-size: 1.15rem;
+  transition: color 0.18s ease, text-shadow 0.18s ease;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
-.synth-eye-btn:hover { color: var(--neon-magenta); }
+.synth-eye-btn:hover {
+  color: var(--neon-magenta);
+  text-shadow: var(--glow-magenta-sm);
+}
 
-/* =========================================
-   ERRORS & BUTTONS
-========================================= */
+/* =========================================================
+   ERROR BANNER
+========================================================= */
 .synth-error {
-  background: rgba(255, 51, 102, 0.15);
-  border: 1px solid rgba(255, 51, 102, 0.4);
+  background: rgba(255, 51, 102, 0.1);
+  border: 1px solid rgba(255, 51, 102, 0.3);
   color: #ffb3c6;
-  padding: 12px;
+  padding: 12px 14px;
   border-radius: 8px;
   text-align: center;
-  font-family: 'Rajdhani', sans-serif;
+  font-family: var(--font-heading);
   font-size: 0.95rem;
+  box-shadow: 0 0 18px rgba(255, 51, 102, 0.08);
 }
 
+/* =========================================================
+   PRIMARY BUTTON
+========================================================= */
 .synth-btn-primary {
   width: 100%;
-  background: linear-gradient(90deg, #ff00ff, #8b5cf6);
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(105deg, #c026d3 0%, #7c3aed 50%, #4f46e5 100%);
   color: #fff;
-  font-family: var(--font-heading); font-size: 1.2rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: 2px;
-  padding: 15px; border: none; border-radius: 10px;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+  transition:
+    box-shadow 0.25s ease,
+    filter 0.25s ease,
+    transform 0.15s ease;
+  box-shadow:
+    0 0 22px rgba(192, 38, 211, 0.36),
+    0 0 44px rgba(124, 58, 237, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Shimmer sweep on hover */
+.synth-btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 70%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.55s ease;
+}
+.synth-btn-primary:hover::before {
+  transform: translateX(100%);
 }
 
 .synth-btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px rgba(255, 0, 255, 0.6);
-  filter: brightness(1.1);
+  box-shadow:
+    0 0 30px rgba(192, 38, 211, 0.52),
+    0 0 60px rgba(124, 58, 237, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  filter: brightness(1.08);
 }
 
-/* =========================================
+.synth-btn-primary:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
+}
+
+.synth-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* =========================================================
    FOOTER
-========================================= */
+========================================================= */
 .synth-footer {
-  text-align: center; margin-top: 25px;
-  font-family: 'Rajdhani', sans-serif; font-size: 0.95rem; color: #aaa;
+  text-align: center;
+  margin-top: 24px;
+  font-family: var(--font-heading);
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.42);
 }
 
 .synth-link {
-  color: var(--neon-purple); cursor: pointer; text-decoration: underline;
-  transition: color 0.2s;
+  color: var(--neon-violet);
+  cursor: pointer;
+  text-decoration: none;
+  transition: color 0.18s ease, text-shadow 0.18s ease;
+  border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+  padding-bottom: 1px;
 }
-.synth-link:hover { color: var(--neon-magenta); }
+.synth-link:hover {
+  color: #fff;
+  text-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+
+.synth-link-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
 
 .synth-auth-text {
-  margin-top: 10px; font-size: 0.8rem; color: #666;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.28);
 }
 
 .system-version {
-  position: absolute; bottom: -25px; right: 0;
-  font-family: var(--font-body); font-size: 0.65rem; color: #555;
+  position: absolute;
+  bottom: -25px;
+  right: 0;
+  font-family: var(--font-body);
+  font-size: 0.62rem;
+  color: rgba(255, 255, 255, 0.2);
+  letter-spacing: 0.06em;
 }
 
-/* =========================================
-   REFINED GLITCH HOVER
-========================================= */
+/* =========================================================
+   GLITCH HOVER EFFECT
+========================================================= */
+.cyber-glitch {
+  position: relative;
+}
 .cyber-glitch::before, .cyber-glitch::after {
   content: attr(data-text);
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background: transparent;
-  opacity: 0; transition: opacity 0.3s;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
 }
-.synth-title:hover.cyber-glitch::before, .synth-title:hover.cyber-glitch::after {
+.synth-title:hover.cyber-glitch::before,
+.synth-title:hover.cyber-glitch::after {
   opacity: 1;
 }
 .cyber-glitch::before {
-  left: 2px; text-shadow: -1px 0 var(--neon-magenta);
+  left: 2px;
+  text-shadow: -1px 0 var(--neon-magenta);
   animation: glitch-anim-1 2.5s infinite linear alternate-reverse;
 }
 .cyber-glitch::after {
-  left: -2px; text-shadow: -1px 0 var(--neon-cyan);
+  left: -2px;
+  text-shadow: 1px 0 var(--neon-cyan);
   animation: glitch-anim-2 3s infinite linear alternate-reverse;
 }
 
 @keyframes glitch-anim-1 {
-  0% { clip-path: inset(20% 0 80% 0); }
-  20% { clip-path: inset(60% 0 10% 0); }
-  40% { clip-path: inset(40% 0 50% 0); }
-  60% { clip-path: inset(80% 0 5% 0); }
-  80% { clip-path: inset(10% 0 70% 0); }
+  0%   { clip-path: inset(20% 0 80% 0); }
+  20%  { clip-path: inset(60% 0 10% 0); }
+  40%  { clip-path: inset(40% 0 50% 0); }
+  60%  { clip-path: inset(80% 0  5% 0); }
+  80%  { clip-path: inset(10% 0 70% 0); }
   100% { clip-path: inset(30% 0 20% 0); }
 }
 @keyframes glitch-anim-2 {
-  0% { clip-path: inset(10% 0 60% 0); }
-  20% { clip-path: inset(30% 0 20% 0); }
-  40% { clip-path: inset(70% 0 10% 0); }
-  60% { clip-path: inset(20% 0 50% 0); }
-  80% { clip-path: inset(90% 0 5% 0); }
-  100% { clip-path: inset(5% 0 80% 0); }
+  0%   { clip-path: inset(10% 0 60% 0); }
+  20%  { clip-path: inset(30% 0 20% 0); }
+  40%  { clip-path: inset(70% 0 10% 0); }
+  60%  { clip-path: inset(20% 0 50% 0); }
+  80%  { clip-path: inset(90% 0  5% 0); }
+  100% { clip-path: inset( 5% 0 80% 0); }
 }
-/* ===== SIGNUP FIX ===== */
 
+/* =========================================================
+   SIGNUP PAGE
+========================================================= */
+.dkx-signup-page {
+  min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+  padding: 7rem 1.25rem 3rem;
+  /* Inherit synth-root background — no extra layer needed */
+}
+
+.dkx-signup-card {
+  width: 950px;
+  max-width: 95%;
+  padding: 32px;
+}
+
+.dkx-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.dkx-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  border: 1px solid rgba(255, 0, 122, 0.28);
+  border-radius: 999px;
+  background: rgba(255, 0, 122, 0.08);
+  color: #f0abfc;
+  padding: 6px 14px;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+}
+
+.dkx-signup-title {
+  color: #fff;
+}
+
+.dkx-subtitle {
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+}
+
+.dkx-signup-error {
+  margin-bottom: 18px;
+}
+
+/* ── Layout grid ── */
 .dkx-main-grid {
   width: 100%;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  align-items: start;
 }
 
 .dkx-left-col,
 .dkx-right-col {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
 }
 
-/* Panels */
+/* ── Inner panels ──
+   Slightly lighter than the outer card so they read as depth layers. */
 .dkx-panel {
-  padding: 16px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(255, 0, 122, 0.2);
+  padding: 18px;
+  border-radius: 14px;
+  /*
+   * BEFORE: rgba(0,0,0,0.35) — solid dark block
+   * AFTER:  translucent with matching glass language
+   */
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 4px 20px rgba(0, 0, 0, 0.28);
 }
 
-/* Titles */
 .dkx-panel-title {
-  margin-bottom: 10px;
-  font-size: 0.9rem;
-  color: #ff007a;
+  margin-bottom: 12px;
+  font-size: 0.82rem;
+  font-family: var(--font-body);
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(220, 80, 255, 0.9);
+  text-shadow: 0 0 10px rgba(220, 80, 255, 0.3);
 }
 
-/* Rows */
 .dkx-form-row {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
 }
 
-/* Inputs */
+/* ── Inputs (signup) ── */
 .dkx-raw-input {
   flex: 1;
-  padding: 10px;
+  min-width: 0;
+  padding: 10px 12px;
   border-radius: 8px;
-  border: none;
-  background: rgba(255,255,255,0.08);
-  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.9);
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  letter-spacing: 0.4px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-
+.dkx-raw-input::placeholder { color: rgba(255, 255, 255, 0.28); }
 .dkx-raw-input:focus {
-  outline: 1px solid #ff007a;
+  outline: none;
+  border-color: rgba(168, 85, 247, 0.55);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.14);
 }
 
-/* Biometric */
+/* ── Biometric panel ── */
 .dkx-biometric-panel {
   text-align: center;
 }
 
 .dkx-hex-container {
-  width: 150px;
-  height: 150px;
-  margin: 10px auto;
-  border-radius: 12px;
-  border: 1px dashed #ff007a;
+  width: 140px;
+  height: 140px;
+  margin: 12px auto;
+  border-radius: 14px;
+  border: 1px dashed rgba(220, 80, 255, 0.45);
+  background: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
 }
-
+.dkx-hex-container:hover {
+  border-color: rgba(220, 80, 255, 0.75);
+  background: rgba(255, 255, 255, 0.055);
+}
 .dkx-hex-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Button */
+.dkx-file-input {
+  max-width: 100%;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.78rem;
+}
+
+/* ── Signup submit button ── */
 .dkx-btn-primary {
   width: 100%;
   margin-top: 20px;
-  padding: 12px;
+  padding: 13px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg,#ff007a,#7a00ff);
+  background: linear-gradient(105deg, #c026d3 0%, #7c3aed 55%, #4f46e5 100%);
   color: white;
-  font-weight: bold;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
   cursor: pointer;
+  transition:
+    box-shadow 0.25s ease,
+    filter 0.25s ease,
+    transform 0.15s ease;
+  box-shadow:
+    0 0 22px rgba(192, 38, 211, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.dkx-btn-primary:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow:
+    0 0 36px rgba(192, 38, 211, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.dkx-btn-primary:active {
+  transform: translateY(0);
+  filter: brightness(0.96);
 }
 
-/* Responsive (IMPORTANT) */
+/* =========================================================
+   RESPONSIVE
+========================================================= */
 @media (max-width: 768px) {
   .dkx-main-grid {
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
+  }
+  .dkx-signup-page {
+    padding: 5rem 1rem 2rem;
+  }
+  .dkx-signup-card {
+    padding: 22px 18px;
+  }
+}
+
+@media (max-width: 440px) {
+  .synth-glass-card {
+    padding: 30px 20px;
+    border-radius: 18px;
+  }
+  .synth-title {
+    font-size: 2rem;
+  }
+}
+
+/* =========================================================
+   SIGNUP PAGE INLINE STYLES (overrides for Signup.jsx cards)
+   These patch the inline <style> block in Signup.jsx so the
+   same glass language applies there too.
+========================================================= */
+/* =========================================================
+   SIGNUP PAGE INLINE STYLES (overrides for Signup.jsx cards)
+========================================================= */
+.signup-card {
+  /* Matches Tailwind: bg-[#0f081e]/35 */
+  background: rgba(15, 8, 30, 0.35) !important; 
+  /* Matches Tailwind: backdrop-blur-xl */
+  backdrop-filter: blur(24px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2) !important;
+  
+  /* Matches Tailwind: border-white/10 border-t-white/20 */
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.2) !important;
+  
+  /* Matches Tailwind shadows */
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    0 24px 64px rgba(0, 0, 0, 0.5) !important;
+}
+
+.signup-page::before {
+  /* Matches the subtle radial vignette on the login page */
+  background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(0, 0, 0, 0.5) 100%) !important;
+}
+
+.signup-bg-video {
+  /* Matches Tailwind: brightness-75 saturate-[1.3] contrast-[1.15] */
+  filter: brightness(0.75) saturate(1.3) contrast(1.15) !important;
+  opacity: 1 !important;
+}
+/* =========================================================
+   UTILITY: Reduced motion
+========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .cyber-glitch::before,
+  .cyber-glitch::after,
+  .synth-btn-primary::before {
+    animation: none;
+    transition: none;
   }
 }
