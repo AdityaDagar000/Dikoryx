@@ -24,7 +24,6 @@ from typing import Any, Optional, TypedDict
 
 from dotenv import load_dotenv
 from sqlalchemy import (
-    Boolean,
     Column,
     ForeignKey,
     Index,
