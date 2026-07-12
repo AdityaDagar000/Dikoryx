@@ -37,6 +37,7 @@ class MetricsSummary:
     total_requests: int
     successful_requests: int
     failed_requests: int
+    total_events: int
     requests_per_sec: float
     average_latency_ms: float
     p95_latency_ms: float
@@ -59,6 +60,7 @@ class MetricsCollector:
         self._lock = threading.Lock()
         self._samples: list[ResponseSample] = []
         self._system_samples: list[SystemSample] = []
+        self._total_events = 0
         self._started_at: float | None = None
         self._stopped_at: float | None = None
         self._process = psutil.Process() if psutil is not None else None
@@ -79,6 +81,7 @@ class MetricsCollector:
         success: bool,
         status_code: int | None = None,
         error: str | None = None,
+        events: int = 0,
     ) -> None:
         sample = ResponseSample(
             endpoint=endpoint,
@@ -89,6 +92,7 @@ class MetricsCollector:
         )
         with self._lock:
             self._samples.append(sample)
+            self._total_events += events
 
     def sample_system(self) -> SystemSample | None:
         if self._process is None or psutil is None:
@@ -115,6 +119,7 @@ class MetricsCollector:
         with self._lock:
             samples = list(self._samples)
             system_samples = list(self._system_samples)
+            total_events = self._total_events
             started = self._started_at
             stopped = self._stopped_at
 
@@ -131,6 +136,7 @@ class MetricsCollector:
             total_requests=len(samples),
             successful_requests=successes,
             failed_requests=failures,
+            total_events=total_events,
             requests_per_sec=rps,
             average_latency_ms=statistics.mean(latencies) if latencies else 0.0,
             p95_latency_ms=_percentile(latencies, 0.95),

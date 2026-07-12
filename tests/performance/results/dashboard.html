@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dikoryx Performance Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --warn: #fbbf24;
+      --border: #334155;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+    }
+    header h1 { margin: 0 0 0.25rem; font-size: 1.75rem; }
+    header p { margin: 0; color: var(--muted); }
+    main { padding: 1.5rem 2rem 3rem; max-width: 1400px; margin: 0 auto; }
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { margin-top: 0; color: var(--accent); font-size: 1.2rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); text-align: left; }
+    th { color: var(--muted); font-weight: 600; width: 220px; }
+    .history-wrap { overflow-x: auto; }
+    .history-wrap table th, .history-wrap table td { white-space: nowrap; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; }
+    .graph-card img { width: 100%; border-radius: 6px; background: #fff; }
+    .warnings ul { margin: 0; padding-left: 1.25rem; color: var(--warn); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Dikoryx Performance Dashboard</h1>
+    <p>Generated 2026-06-27T13:46:54.120281+00:00</p>
+  </header>
+  <main>
+    
+    <section>
+      <h2>Latest Benchmark</h2>
+      
+        <table>
+          <tr><th>Run ID</th><td>46251517e142</td></tr>
+          <tr><th>Timestamp</th><td>2026-06-27T13:46:51.476859+00:00</td></tr>
+          <tr><th>Agents</th><td>10</td></tr>
+          <tr><th>Duration</th><td>60.0s</td></tr>
+          <tr><th>Events</th><td>256</td></tr>
+          <tr><th>Requests/sec</th><td>1.16</td></tr>
+          <tr><th>Average Latency</th><td>5758.29 ms</td></tr>
+          <tr><th>P95</th><td>9728.1 ms</td></tr>
+          <tr><th>P99</th><td>10013.58 ms</td></tr>
+          <tr><th>Success / Failures</th><td>69 / 3</td></tr>
+        </table>
+        
+    </section>
+    <section>
+      <h2>Hardware &amp; Environment</h2>
+      <table>
+        <tr><th>Python</th><td>3.11.9</td></tr>
+        <tr><th>OS</th><td>Windows 10</td></tr>
+        <tr><th>CPU</th><td>13th Gen Intel(R) Core(TM) i7-13620H (16 cores)</td></tr>
+        <tr><th>RAM</th><td>15.6 GB</td></tr>
+        <tr><th>Database</th><td><code>unknown</code></td></tr>
+        <tr><th>Git Commit</th><td><code>9493a76eecf4857636ffc7d44edbabc1682da3fb</code></td></tr>
+        <tr><th>Git Branch</th><td><code>main</code></td></tr>
+      </table>
+    </section>
+    <section>
+      <h2>Test Configuration</h2>
+      <table><tr><th>Base URL</th><td>http://127.0.0.1:8000</td></tr><tr><th>Duration (s)</th><td>60.0</td></tr><tr><th>Warmup (s)</th><td>2.0</td></tr><tr><th>Min interval (s)</th><td>1.0</td></tr><tr><th>Max interval (s)</th><td>5.0</td></tr><tr><th>Sample interval (s)</th><td>1.0</td></tr><tr><th>Request timeout (s)</th><td>10.0</td></tr><tr><th>Output directory</th><td>tests\performance\results</td></tr><tr><th>Agents</th><td>10</td></tr></table>
+    </section>
+    <section>
+      <h2>Benchmark Graphs</h2>
+      <div class="grid">
+        <div class="graph-card">
+          <h3>Agents Vs Average Latency</h3>
+          <img src="graphs/agents_vs_average_latency.png" alt="Agents Vs Average Latency">
+        </div>
+        
+        <div class="graph-card">
+          <h3>Agents Vs P95</h3>
+          <img src="graphs/agents_vs_p95.png" alt="Agents Vs P95">
+        </div>
+        
+        <div class="graph-card">
+          <h3>Agents Vs Cpu Usage</h3>
+          <img src="graphs/agents_vs_cpu_usage.png" alt="Agents Vs Cpu Usage">
+        </div>
+        
+        <div class="graph-card">
+          <h3>Agents Vs Memory Usage</h3>
+          <img src="graphs/agents_vs_memory_usage.png" alt="Agents Vs Memory Usage">
+        </div>
+        
+        <div class="graph-card">
+          <h3>Agents Vs Throughput</h3>
+          <img src="graphs/agents_vs_throughput.png" alt="Agents Vs Throughput">
+        </div>
+        </div>
+    </section>
+    <section class="history-wrap">
+      <h2>Historical Benchmarks</h2>
+      <table>
+        <thead><tr><th>Timestamp</th><th>Git Commit Hash</th><th>Branch</th><th>Agents</th><th>Duration</th><th>Events</th><th>Requests/sec</th><th>Average Latency</th><th>P95</th><th>P99</th><th>CPU Average</th><th>CPU Maximum</th><th>RAM Average</th><th>RAM Maximum</th><th>Thread Count</th><th>Open Connections</th><th>Success</th><th>Failures</th></tr></thead>
+        <tbody><tr><td>2026-06-27T13:46:51.476859+00:00</td><td>9493a76eecf4857636ffc7d44edbabc1682da3fb</td><td>main</td><td>10</td><td>60.0</td><td>256</td><td>1.16</td><td>5758.29</td><td>9728.1</td><td>10013.58</td><td>1.92</td><td>9.1</td><td>36.65</td><td>36.86</td><td>19</td><td>10</td><td>69</td><td>3</td></tr>
+</tbody>
+      </table>
+    </section>
+  </main>
+</body>
+</html>

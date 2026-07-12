@@ -18,6 +18,9 @@ python -m tests.performance.load_test --agents 50 --duration 60
 
 # Full preset suite: 10, 50, 100, 250, 500, 1000 agents
 python -m tests.performance.load_test --suite --duration 30
+
+# Suite with full automated reporting (history, graphs, dashboard)
+python -m tests.performance.load_test --suite --report
 ```
 
 ## CLI options
@@ -26,6 +29,7 @@ python -m tests.performance.load_test --suite --duration 30
 |------|---------|-------------|
 | `--agents` | 50 | Number of simulated endpoint agents |
 | `--suite` | off | Run all preset agent counts |
+| `--report` | off | Generate graphs, suite Markdown report, HTML dashboard, and session JSON |
 | `--host` | `http://127.0.0.1:8000` | Backend base URL |
 | `--duration` | 60 | Test duration (seconds) |
 | `--warmup` | 2 | Random per-agent startup delay (seconds) |
@@ -40,17 +44,26 @@ python -m tests.performance.load_test --suite --duration 30
 |--------|---------|
 | `agent_simulator.py` | Realistic per-agent payloads (heartbeat, file/process/clipboard/network/compliance/DLP events) |
 | `load_test.py` | Concurrent load runner and CLI |
-| `metrics.py` | Response-time and system resource collection |
+| `metrics.py` | Response-time, event count, and system resource collection |
 | `benchmark.py` | Console summary plus JSON/Markdown export |
+| `environment.py` | Python/OS/CPU/RAM/database/git metadata collection |
+| `reporting.py` | History CSV, regression detection, matplotlib graphs, HTML dashboard |
 
-## Output
+## Automated output
 
-Each run writes:
+Every benchmark run automatically:
 
-- `tests/performance/results/<run_id>_<agents>agents.json`
-- `tests/performance/results/<run_id>_<agents>agents.md`
+- Appends a row to `tests/performance/results/history.csv`
+- Writes per-run JSON and Markdown under `tests/performance/results/`
+- Records environment metadata (Python, OS, CPU, RAM, database, git commit)
+- Compares against the previous run at the same agent count and warns on >10% regressions (latency, CPU, memory, throughput)
 
-Console summary includes requests/sec, success/failure counts, average/P95/P99 latency, total runtime, and system metrics (CPU, memory, threads, connections).
+With `--report`, the suite also generates:
+
+- `tests/performance/results/graphs/` — Agents vs latency, P95, CPU, memory, throughput
+- `tests/performance/results/latest_benchmark_report.md` — Suite summary
+- `tests/performance/results/dashboard.html` — Interactive dashboard with history table and embedded graphs
+- `tests/performance/results/latest_benchmark_session.json` — Complete session manifest
 
 ## CI/CD reuse
 
@@ -58,10 +71,13 @@ Import and run programmatically:
 
 ```python
 from pathlib import Path
-from tests.performance.load_test import LoadTestConfig, LoadTestRunner
+from tests.performance.load_test import LoadTestConfig, LoadTestRunner, finalize_report
+from tests.performance.environment import collect_environment_info
 
-config = LoadTestConfig(agent_count=100, duration_sec=30, output_dir=Path("artifacts/perf"))
-result = LoadTestRunner(config).run()
+config = LoadTestConfig(agent_count=100, duration_sec=30, output_dir=Path("artifacts/perf"), generate_report=True)
+env = collect_environment_info()
+result = LoadTestRunner(config, environment=env).run()
+finalize_report([result], config, env)
 assert result.failed_requests == 0
 ```
 

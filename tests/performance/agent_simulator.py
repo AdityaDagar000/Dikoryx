@@ -245,14 +245,15 @@ class SimulatedAgent:
         base_url: str,
         *,
         timeout: float = 10.0,
-    ) -> tuple[bool, float, int | None, str | None]:
-        return _post_json(
+    ) -> tuple[bool, float, int | None, str | None, int]:
+        outcome = _post_json(
             session,
             f"{base_url.rstrip('/')}/api/v1/ingest/heartbeat",
             self.heartbeat_payload(),
             timeout=timeout,
             success_check=lambda body: body.get("status") == "alive",
         )
+        return (*outcome, 0)
 
     def send_telemetry(
         self,
@@ -260,15 +261,16 @@ class SimulatedAgent:
         base_url: str,
         *,
         timeout: float = 10.0,
-    ) -> tuple[bool, float, int | None, str | None]:
+    ) -> tuple[bool, float, int | None, str | None, int]:
         payload = self.telemetry_payload()
-        return _post_json(
+        outcome = _post_json(
             session,
             f"{base_url.rstrip('/')}/api/v1/ingest",
             payload,
             timeout=timeout,
             success_check=lambda body: body.get("status") == "ok",
         )
+        return (*outcome, len(payload.get("events", [])))
 
 
 def create_agents(count: int) -> list[SimulatedAgent]:

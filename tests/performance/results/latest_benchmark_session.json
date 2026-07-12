@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-06-27T13:46:51.511525+00:00",
+  "environment": {
+    "python_version": "3.11.9",
+    "os_name": "Windows",
+    "os_release": "10",
+    "cpu_model": "13th Gen Intel(R) Core(TM) i7-13620H",
+    "cpu_count": 16,
+    "ram_total_gb": 15.6,
+    "database": "unknown",
+    "git_commit_hash": "9493a76eecf4857636ffc7d44edbabc1682da3fb",
+    "git_branch": "main"
+  },
+  "config": {
+    "Base URL": "http://127.0.0.1:8000",
+    "Duration (s)": 60.0,
+    "Warmup (s)": 2.0,
+    "Min interval (s)": 1.0,
+    "Max interval (s)": 5.0,
+    "Sample interval (s)": 1.0,
+    "Request timeout (s)": 10.0,
+    "Output directory": "tests\\performance\\results",
+    "Agents": 10
+  },
+  "results": [
+    {
+      "run_id": "46251517e142",
+      "timestamp": "2026-06-27T13:46:51.476859+00:00",
+      "agent_count": 10,
+      "duration_sec": 60.0,
+      "base_url": "http://127.0.0.1:8000",
+      "total_requests": 72,
+      "successful_requests": 69,
+      "failed_requests": 3,
+      "failure_rate": 4.17,
+      "requests_per_sec": 1.16,
+      "average_latency_ms": 5758.29,
+      "p95_latency_ms": 9728.1,
+      "p99_latency_ms": 10013.58,
+      "total_runtime_sec": 62.29,
+      "total_events": 256,
+      "system_metrics": {
+        "cpu_percent_avg": 1.92,
+        "cpu_percent_max": 9.1,
+        "memory_mb_avg": 36.65,
+        "memory_mb_max": 36.86,
+        "thread_count_max": 19,
+        "open_connections_max": 10,
+        "sample_count": 62
+      },
+      "git_commit_hash": "9493a76eecf4857636ffc7d44edbabc1682da3fb",
+      "git_branch": "main",
+      "environment": {
+        "python_version": "3.11.9",
+        "os_name": "Windows",
+        "os_release": "10",
+        "cpu_model": "13th Gen Intel(R) Core(TM) i7-13620H",
+        "cpu_count": 16,
+        "ram_total_gb": 15.6,
+        "database": "unknown",
+        "git_commit_hash": "9493a76eecf4857636ffc7d44edbabc1682da3fb",
+        "git_branch": "main"
+      }
+    }
+  ]
+}

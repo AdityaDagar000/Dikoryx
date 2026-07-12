@@ -1,0 +1,2 @@
+Timestamp,Git Commit Hash,Branch,Agents,Duration,Events,Requests/sec,Average Latency,P95,P99,CPU Average,CPU Maximum,RAM Average,RAM Maximum,Thread Count,Open Connections,Success,Failures
+2026-06-27T13:46:51.476859+00:00,9493a76eecf4857636ffc7d44edbabc1682da3fb,main,10,60.0,256,1.16,5758.29,9728.1,10013.58,1.92,9.1,36.65,36.86,19,10,69,3

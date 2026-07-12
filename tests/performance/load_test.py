@@ -22,7 +22,15 @@ from tests.performance.benchmark import (
     export_markdown,
     print_console_summary,
 )
+from tests.performance.environment import EnvironmentInfo, collect_environment_info
 from tests.performance.metrics import MetricsCollector
+from tests.performance.reporting import (
+    append_to_history,
+    detect_regressions,
+    generate_full_report,
+    print_regression_warnings,
+    save_run_manifest,
+)
 
 DEFAULT_AGENT_COUNTS: tuple[int, ...] = (10, 50, 100, 250, 500, 1000)
 DEFAULT_BASE_URL = "http://127.0.0.1:8000"
@@ -44,14 +52,21 @@ class LoadTestConfig:
     output_dir: Path = Path("tests/performance/results")
     sample_interval_sec: float = 1.0
     request_timeout_sec: float = 10.0
+    generate_report: bool = False
 
 
 class LoadTestRunner:
     """Runs many simulated agents concurrently against the Dikoryx backend."""
 
-    def __init__(self, config: LoadTestConfig) -> None:
+    def __init__(
+        self,
+        config: LoadTestConfig,
+        *,
+        environment: EnvironmentInfo | None = None,
+    ) -> None:
         self.config = config
         self.metrics = MetricsCollector()
+        self.environment = environment or collect_environment_info()
 
     def run(self) -> BenchmarkResult:
         agents = create_agents(self.config.agent_count)
@@ -92,6 +107,7 @@ class LoadTestRunner:
             duration_sec=self.config.duration_sec,
             base_url=self.config.base_url,
             metrics=self.metrics.summarize(),
+            environment=self.environment,
         )
         self._export_result(result)
         print_console_summary(result)
@@ -114,17 +130,19 @@ class LoadTestRunner:
 
         while time.perf_counter() < end_time and not stop_event.is_set():
             if random.random() < 0.25:
-                self._record(agent.send_heartbeat(
+                outcome = agent.send_heartbeat(
                     session,
                     self.config.base_url,
                     timeout=self.config.request_timeout_sec,
-                ), endpoint="heartbeat")
+                )
+                self._record(outcome, endpoint="heartbeat")
             else:
-                self._record(agent.send_telemetry(
+                outcome = agent.send_telemetry(
                     session,
                     self.config.base_url,
                     timeout=self.config.request_timeout_sec,
-                ), endpoint="telemetry")
+                )
+                self._record(outcome, endpoint="telemetry")
 
             sleep_for = random.uniform(
                 self.config.min_interval_sec,
@@ -138,17 +156,18 @@ class LoadTestRunner:
 
     def _record(
         self,
-        outcome: tuple[bool, float, int | None, str | None],
+        outcome: tuple[bool, float, int | None, str | None, int],
         *,
         endpoint: str,
     ) -> None:
-        success, latency_ms, status_code, error = outcome
+        success, latency_ms, status_code, error, events = outcome
         self.metrics.record_response(
             endpoint=endpoint,
             latency_ms=latency_ms,
             success=success,
             status_code=status_code,
             error=error,
+            events=events,
         )
 
     def _sample_system_loop(self, stop_event: threading.Event) -> None:
@@ -160,11 +179,33 @@ class LoadTestRunner:
         base = self.config.output_dir / f"{result.run_id}_{result.agent_count}agents"
         json_path = export_json(result, base.with_suffix(".json"))
         md_path = export_markdown(result, base.with_suffix(".md"))
+        append_to_history(result, self.config.output_dir)
+        warnings = detect_regressions([result], self.config.output_dir)
+        print_regression_warnings(warnings)
         print(f"[LOAD TEST] Wrote {json_path}")
         print(f"[LOAD TEST] Wrote {md_path}")
 
 
-def run_suite(config: LoadTestConfig, agent_counts: Iterable[int]) -> list[BenchmarkResult]:
+def config_to_report_dict(config: LoadTestConfig) -> dict[str, str | float | int]:
+    return {
+        "Base URL": config.base_url,
+        "Duration (s)": config.duration_sec,
+        "Warmup (s)": config.warmup_sec,
+        "Min interval (s)": config.min_interval_sec,
+        "Max interval (s)": config.max_interval_sec,
+        "Sample interval (s)": config.sample_interval_sec,
+        "Request timeout (s)": config.request_timeout_sec,
+        "Output directory": str(config.output_dir),
+    }
+
+
+def run_suite(
+    config: LoadTestConfig,
+    agent_counts: Iterable[int],
+    *,
+    environment: EnvironmentInfo | None = None,
+) -> list[BenchmarkResult]:
+    env = environment or collect_environment_info()
     results: list[BenchmarkResult] = []
     for count in agent_counts:
         run_config = LoadTestConfig(
@@ -178,9 +219,30 @@ def run_suite(config: LoadTestConfig, agent_counts: Iterable[int]) -> list[Bench
             output_dir=config.output_dir,
             sample_interval_sec=config.sample_interval_sec,
             request_timeout_sec=config.request_timeout_sec,
+            generate_report=config.generate_report,
         )
-        results.append(LoadTestRunner(run_config).run())
+        results.append(LoadTestRunner(run_config, environment=env).run())
+
+    if config.generate_report:
+        finalize_report(results, run_config, env)
+
     return results
+
+
+def finalize_report(
+    results: list[BenchmarkResult],
+    config: LoadTestConfig,
+    environment: EnvironmentInfo | None = None,
+) -> None:
+    env = environment or collect_environment_info()
+    report_config = config_to_report_dict(config)
+    if len(results) == 1:
+        report_config["Agents"] = results[0].agent_count
+    else:
+        report_config["Agent counts"] = ", ".join(str(result.agent_count) for result in results)
+
+    save_run_manifest(results, env, report_config, config.output_dir)
+    generate_full_report(results, env, report_config, config.output_dir)
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -197,6 +259,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--suite",
         action="store_true",
         help=f"Run preset agent counts: {', '.join(str(n) for n in DEFAULT_AGENT_COUNTS)}.",
+    )
+    parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Generate history CSV, graphs, Markdown report, and HTML dashboard after the run.",
     )
     parser.add_argument(
         "--host",
@@ -236,7 +303,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=Path("tests/performance/results"),
-        help="Directory for JSON and Markdown benchmark exports.",
+        help="Directory for benchmark exports, history, graphs, and dashboard.",
     )
     return parser.parse_args(argv)
 
@@ -252,11 +319,17 @@ def main(argv: list[str] | None = None) -> int:
         max_interval_sec=args.max_interval,
         api_key=args.api_key,
         output_dir=args.output_dir,
+        generate_report=args.report,
     )
+    environment = collect_environment_info()
+
     if args.suite:
-        run_suite(config, DEFAULT_AGENT_COUNTS)
+        run_suite(config, DEFAULT_AGENT_COUNTS, environment=environment)
     else:
-        LoadTestRunner(config).run()
+        result = LoadTestRunner(config, environment=environment).run()
+        if config.generate_report:
+            finalize_report([result], config, environment)
+
     return 0
 
 

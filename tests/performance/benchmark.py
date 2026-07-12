@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from tests.performance.environment import EnvironmentInfo, collect_environment_info
 from tests.performance.metrics import MetricsSummary, system_metrics_summary
 
 
@@ -27,7 +28,11 @@ class BenchmarkResult:
     p95_latency_ms: float
     p99_latency_ms: float
     total_runtime_sec: float
+    total_events: int
     system_metrics: dict[str, Any]
+    git_commit_hash: str = "unknown"
+    git_branch: str = "unknown"
+    environment: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -40,7 +45,9 @@ def build_benchmark_result(
     duration_sec: float,
     base_url: str,
     metrics: MetricsSummary,
+    environment: EnvironmentInfo | None = None,
 ) -> BenchmarkResult:
+    env = environment or collect_environment_info()
     return BenchmarkResult(
         run_id=run_id,
         timestamp=datetime.now(timezone.utc).isoformat(),
@@ -56,16 +63,23 @@ def build_benchmark_result(
         p95_latency_ms=round(metrics.p95_latency_ms, 2),
         p99_latency_ms=round(metrics.p99_latency_ms, 2),
         total_runtime_sec=round(metrics.total_runtime_sec, 2),
+        total_events=metrics.total_events,
         system_metrics=system_metrics_summary(metrics.system_samples),
+        git_commit_hash=env.git_commit_hash,
+        git_branch=env.git_branch,
+        environment=env.to_dict(),
     )
 
 
 def print_console_summary(result: BenchmarkResult) -> None:
     print("\n=== Dikoryx Performance Benchmark ===")
     print(f"Run ID:              {result.run_id}")
+    print(f"Git commit:          {result.git_commit_hash[:12]}")
+    print(f"Branch:              {result.git_branch}")
     print(f"Agents:              {result.agent_count}")
     print(f"Duration:            {result.duration_sec:.0f}s")
     print(f"Total requests:      {result.total_requests}")
+    print(f"Total events:        {result.total_events}")
     print(f"Successful:          {result.successful_requests}")
     print(f"Failed:              {result.failed_requests}")
     print(f"Failure rate:        {result.failure_rate:.2f}%")
@@ -90,20 +104,34 @@ def export_json(result: BenchmarkResult, output_path: Path) -> Path:
 
 def export_markdown(result: BenchmarkResult, output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    env = result.environment
     lines = [
         "# Dikoryx Performance Benchmark",
         "",
         f"- **Run ID:** `{result.run_id}`",
         f"- **Timestamp (UTC):** {result.timestamp}",
+        f"- **Git commit:** `{result.git_commit_hash[:12]}`",
+        f"- **Branch:** `{result.git_branch}`",
         f"- **Agents:** {result.agent_count}",
         f"- **Configured duration:** {result.duration_sec:.0f}s",
         f"- **Base URL:** `{result.base_url}`",
+        "",
+        "## Environment",
+        "",
+        "| Property | Value |",
+        "| --- | --- |",
+        f"| Python | {env.get('python_version', 'unknown')} |",
+        f"| OS | {env.get('os_name', 'unknown')} {env.get('os_release', '')} |",
+        f"| CPU | {env.get('cpu_model', 'unknown')} ({env.get('cpu_count', '?')} cores) |",
+        f"| RAM | {env.get('ram_total_gb', '?')} GB |",
+        f"| Database | `{env.get('database', 'unknown')}` |",
         "",
         "## Request Metrics",
         "",
         "| Metric | Value |",
         "| --- | ---: |",
         f"| Total requests | {result.total_requests} |",
+        f"| Total events | {result.total_events} |",
         f"| Successful requests | {result.successful_requests} |",
         f"| Failed requests | {result.failed_requests} |",
         f"| Failure rate | {result.failure_rate:.2f}% |",
